@@ -1,7 +1,7 @@
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { Eye, Edit, Trash2 } from "lucide-react";
-import { TaskStatus, type Task } from "../types/task";
+import { TaskStatus, type Task } from "@/types/task";
 
 interface TaskCardProps {
   task: Task;
