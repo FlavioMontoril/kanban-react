@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
-import { useTaskStore } from "./store/useTaskStore";
-import { KANBAN_COLUMNS, TaskStatus, type Task } from "./types/task";
-import { TaskCard } from "./components/TaskCard";
+import { useTaskStore } from "@/store/useTaskStore";
+import { KANBAN_COLUMNS, TaskStatus, type Task } from "@/types/task";
+import { TaskCard } from "@/components/TaskCard";
 import {
   Plus,
   LayoutList,
@@ -13,7 +13,7 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import { TaskModal } from "./components/kanbam/TaskModal";
+import { TaskModal } from "@/components/kanbam/TaskModal";
 
 export default function App() {
   const { tasks, addTask, updateTask, deleteTask, moveTask } = useTaskStore();
