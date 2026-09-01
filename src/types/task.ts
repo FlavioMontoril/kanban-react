@@ -7,13 +7,23 @@ export enum TaskStatus  {
 }
 
 export interface Task {
-  id: string;          // Mapeado como string/number no SVAR
-  code: string;        // TSK-1001
-  status: TaskStatus;  // Identificador da coluna no SVAR
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
   reporter: string;
+  assignee: string | null;
   createdAt: string;
-  updatedAt?: string;
-  user_id?: string;
+  updatedAt: string | null;
+}
+
+export type TaskRequestDTO = Pick<Task, 'code' | 'title' | 'description' | 'reporter' | 'assignee'> & {
+  assignee?: string | null;
+};
+
+export interface UpdateTaskStatusDTO {
+  status: TaskStatus;
 }
 
 export const KANBAN_COLUMNS = [
