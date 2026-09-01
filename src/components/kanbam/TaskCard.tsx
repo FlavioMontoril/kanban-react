@@ -1,7 +1,7 @@
-import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import { Eye, Edit, Trash2 } from "lucide-react";
 import { TaskStatus, type Task } from "@/types/task";
+import { TaskHoverCard } from "../commons/TaskHoverCard";
+import { TaskDropdownMenu } from "../commons/TaskDropdownMenuCard";
 
 interface TaskCardProps {
   task: Task;
@@ -29,10 +29,19 @@ const getBorderColor = (status: TaskStatus) => {
 export const TaskCard: React.FC<TaskCardProps> = ({
   task,
   index,
-  onView,
   onEdit,
   onDelete,
 }) => {
+  function handleSelectAction(action: "edit" | "delete") {
+    if (action === "edit") {
+      onEdit(task);
+    }
+    if (action === "delete") {
+      onDelete(task.id);
+      return;
+    }
+  }
+
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided, snapshot) => (
@@ -53,13 +62,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               {task.code}
             </span>
             <div className="flex gap-0.5 text-slate-400 opacity-60 group-hover:opacity-100 transition-opacity">
-              <button
+              {/* <button
                 onClick={() => onView(task)}
                 className="hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 <Eye size={14} />
-              </button>
-              <button
+              </button> */}
+              <TaskHoverCard task={task} />
+              <TaskDropdownMenu
+                onSelectAction={handleSelectAction}
+              />
+              {/* <button
                 onClick={() => onEdit(task)}
                 className="hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950"
               >
@@ -70,7 +83,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 className="hover:text-red-600 dark:hover:text-red-400 p-1 rounded hover:bg-red-50 dark:hover:bg-red-950"
               >
                 <Trash2 size={14} />
-              </button>
+              </button> */}
             </div>
           </div>
 
