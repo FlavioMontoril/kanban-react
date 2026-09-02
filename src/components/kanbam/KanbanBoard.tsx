@@ -17,7 +17,9 @@ import { toast, Toaster } from "sonner";
 import { TaskCard } from "./TaskCard";
 
 export default function KanbanBoard() {
-  const { tasks, loading, fetchTasks, createTask, moveTaskStatus } = useTasks();
+  const { tasks:dataTasks, loading, fetchTasks, createTask, moveTaskStatus } = useTasks();
+
+  const tasks = Array.isArray(dataTasks) ? dataTasks : [];
 
   // 1. Carrega as tarefas vindas do backend Spring Boot na montagem
   useEffect(() => {
@@ -85,8 +87,7 @@ export default function KanbanBoard() {
     total: tasks.length,
     open: tasks.filter((t) => t.status === TaskStatus.OPEN).length,
     inProgress: tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length,
-    underReview: tasks.filter((t) => t.status === TaskStatus.UNDER_REVIEW)
-      .length,
+    underReview: tasks.filter((t) => t.status === TaskStatus.UNDER_REVIEW).length,
     done: tasks.filter((t) => t.status === TaskStatus.DONE).length,
     cancelado: tasks.filter((t) => t.status === TaskStatus.CANCELED).length,
   };
@@ -104,12 +105,12 @@ export default function KanbanBoard() {
               <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 dark:from-slate-100 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-transparent">
                 Kanban Board
               </h1>
-              <div className="flex">
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                  Gerenciador de Tarefas Inteligente
+              <div className="flex items-center">
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                 { `Gerenciador de Tarefas Inteligente -`}
                 </p>
-                <p className="text-xs text-slate-900 dark:text-slate-400 mt-0.5 font-bold">
-                  {` - Total de: ${stats.total}`}
+                <p className="text-md text-violet-800 dark:text-slate-400 mt-0.5 font-bold">
+                  {` Total de: ${stats.total}`}
                 </p>
               </div>
             </div>

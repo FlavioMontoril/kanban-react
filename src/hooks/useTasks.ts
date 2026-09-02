@@ -5,11 +5,7 @@ import { taskApi } from "@/services/taskService";
 import { toast } from "sonner";
 
 export function useTasks() {
-  const {
-    tasks,
-    setTasks,
-    moveTaskLocal,
-  } = useTaskStore();
+  const { tasks, setTasks, moveTaskLocal } = useTaskStore();
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,12 +17,11 @@ export function useTasks() {
 
     try {
       const data = await taskApi.findAll();
+
       setTasks(data);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Erro ao buscar tarefas."
-      );
+    } catch (error) {
+      setError(error.response?.data?.message || "Erro ao buscar tarefas.");
+      setTasks([]);
     } finally {
       setLoading(false);
     }
@@ -44,16 +39,12 @@ export function useTasks() {
       toast.success("Tarefa criada", {
         description: "A tarefa foi criada com sucesso.",
       });
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Erro ao criar tarefa."
-      );
+    } catch (error) {
+      setError(error.response?.data?.message || "Erro ao criar tarefa.");
 
       toast.error("Erro ao criar tarefa", {
         description:
-          err.response?.data?.message ||
-          "Não foi possível criar a tarefa.",
+          error.response?.data?.message || "Não foi possível criar a tarefa.",
       });
     } finally {
       setLoading(false);
@@ -61,13 +52,8 @@ export function useTasks() {
   };
 
   // Mover tarefa
-  const moveTaskStatus = async (
-    taskId: string,
-    targetStatus: TaskStatus
-  ) => {
-    const currentTask = tasks.find(
-      (task) => task.id === taskId
-    );
+  const moveTaskStatus = async (taskId: string, targetStatus: TaskStatus) => {
+    const currentTask = tasks.find((task) => task.id === taskId);
 
     if (!currentTask) {
       return;
@@ -95,17 +81,14 @@ export function useTasks() {
       toast.success("Status atualizado", {
         description: `A tarefa foi movida para "${targetStatus}".`,
       });
-    } catch (err: any) {
-      console.error(
-        "Falha ao atualizar status:",
-        err
-      );
+    } catch (error) {
+      console.error("Falha ao atualizar status:", error);
 
       // ↩️ Rollback
       moveTaskLocal(taskId, previousStatus);
 
       const message =
-        err.response?.data?.message ||
+        error.response?.data?.message ||
         "Não foi possível atualizar o status da tarefa.";
 
       setError(message);
