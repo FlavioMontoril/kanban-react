@@ -2,26 +2,17 @@ import { useEffect } from "react";
 import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { useTasks } from "@/hooks/useTasks";
 import { KANBAN_COLUMNS, TaskStatus, type Task } from "@/types/task";
-import {
-  Clock,
-  Eye,
-  CheckCircle2,
-  XCircle,
-  Circle,
-} from "lucide-react";
 import { toast } from "sonner";
 import { TaskCard } from "./TaskCard";
+import { getIcon, getIconColor } from "./utils/border-color";
+import { VirtualizedTaskList } from "./virtualized-task-list";
 
-interface IKanbanBoard{
-  tasks: Task[]
+interface IKanbanBoard {
+  tasks: Task[];
 }
 
-export default function KanbanBoard({tasks}: IKanbanBoard) {
-  const {
-    loading,
-    fetchTasks,
-    moveTaskStatus,
-  } = useTasks();
+export default function KanbanBoard({ tasks }: IKanbanBoard) {
+  const { loading, fetchTasks, moveTaskStatus } = useTasks();
 
   // 1. Carrega as tarefas vindas do backend Spring Boot na montagem
   useEffect(() => {
@@ -74,7 +65,7 @@ export default function KanbanBoard({tasks}: IKanbanBoard) {
           {/* Cabeçalho (Fixo) */}
           <header className="flex-none flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight bg-linear-to from-slate-900 via-indigo-950 to-indigo-900 dark:from-slate-100 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-black">
+              <h1 className="text-2xl font-extrabold tracking-tight bg-linear-to from-slate-900 via-indigo-950 to-indigo-900 dark:from-slate-100 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-black dark:text-slate-200">
                 Kanban Board
               </h1>
               <div className="flex items-center">
@@ -87,69 +78,6 @@ export default function KanbanBoard({tasks}: IKanbanBoard) {
               </div>
             </div>
           </header>
-
-          {/* Métricas e Contadores (Fixos) */}
-          <section className="flex-none grid grid-cols-2 md:grid-cols-5 gap-3">
-            <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center gap-3">
-              <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/50 rounded-xl text-indigo-600 dark:text-indigo-400">
-                <Circle size={18} />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
-                  Abertas
-                </p>
-                <h3 className="text-lg font-black">{stats.open}</h3>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center gap-3">
-              <div className="p-2.5 bg-amber-50 dark:bg-amber-950/50 rounded-xl text-amber-600 dark:text-amber-400">
-                <Clock size={18} />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
-                  Em Progresso
-                </p>
-                <h3 className="text-lg font-black">{stats.inProgress}</h3>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center gap-3">
-              <div className="p-2.5 bg-purple-50 dark:bg-purple-950/50 rounded-xl text-purple-600 dark:text-purple-400">
-                <Eye size={18} />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
-                  Em Revisão
-                </p>
-                <h3 className="text-lg font-black">{stats.underReview}</h3>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center gap-3">
-              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/50 rounded-xl text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 size={18} />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
-                  Concluído
-                </p>
-                <h3 className="text-lg font-black">{stats.done}</h3>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center gap-3">
-              <div className="p-2.5 bg-red-50 dark:bg-red-950/50 rounded-xl text-red-600 dark:text-red-400">
-                <XCircle size={18} />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
-                  Cancelado
-                </p>
-                <h3 className="text-lg font-black">{stats.cancelado}</h3>
-              </div>
-            </div>
-          </section>
 
           {/* Status de Sincronização */}
           {loading && (
@@ -171,57 +99,48 @@ export default function KanbanBoard({tasks}: IKanbanBoard) {
                   >
                     {/* Título da Coluna */}
                     <div className="flex-none flex justify-between items-center mb-2 px-1">
-                      <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200">
-                        {col.label}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <div className={`${getIconColor(col.id)} rounded-3xl`}>
+                          {getIcon(col.id)}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200">
+                            {col.label}
+                          </h3>
+                        </div>
+                      </div>
                       <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-200/80 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                         {columnTasks.length}
                       </span>
                     </div>
 
                     {/* Área Droppable (Contida dentro da coluna sem transbordar) */}
-                    <Droppable droppableId={col.id}>
+                    {/* <Droppable droppableId={col.id}>
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className={`flex-1 h-full overflow-y-auto rounded-xl transition-colors p-1 space-y-2 custom-scrollbar ${
+                          className={`flex-1 h-full overflow-y-auto rounded-xl transition-colors p-1 custom-scrollbar ${
                             snapshot.isDraggingOver
                               ? "bg-indigo-50/50 dark:bg-indigo-950/30 ring-2 ring-indigo-200 dark:ring-indigo-800 "
                               : ""
                           }`}
                         >
                           {columnTasks.map((task, index) => (
-                            <TaskCard
-                              key={task.id}
-                              task={task}
-                              index={index}
-                              // onView={(t) =>
-                              //   setModalState({
-                              //     isOpen: true,
-                              //     mode: "view",
-                              //     task: t,
-                              //   })
-                              // }
-                              // onEdit={(t) =>
-                              //   setModalState({
-                              //     isOpen: true,
-                              //     mode: "edit",
-                              //     task: t,
-                              //   })
-                              // }
-                              // onUpdateStatus={(t) =>
-                              //   setModalState({
-                              //     isOpen: true,
-                              //     mode: "updateStatus",
-                              //     task: t,
-                              //   })
-                              // }
-                              // onDelete={() => {}}
-                            />
+                            <TaskCard key={task.id} task={task} index={index} />
                           ))}
                           {provided.placeholder}
                         </div>
+                      )}
+                    </Droppable> */}
+                    {/* Virtualização*/}
+                    <Droppable droppableId={col.id}>
+                      {(provided, snapshot) => (
+                        <VirtualizedTaskList
+                          columnTasks={columnTasks}
+                          provided={provided}
+                          isDraggingOver={snapshot.isDraggingOver}
+                        />
                       )}
                     </Droppable>
                   </div>

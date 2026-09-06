@@ -1,4 +1,9 @@
-import React, { useState, useEffect, type MouseEvent } from "react";
+import React, {
+  useState,
+  useEffect,
+  type MouseEvent,
+  type ChangeEvent,
+} from "react";
 import { TaskStatus, type Task, type TaskRequestDTO } from "@/types/task";
 import { MoveRight } from "lucide-react";
 import { useTasks } from "@/hooks/useTasks";
@@ -16,7 +21,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   task,
   onClose,
 }) => {
-  const { createTask } = useTasks();
+  const { createTask, moveTaskStatus } = useTasks();
+
   const [formData, setFormData] = useState<TaskRequestDTO>({
     code: "",
     title: "",
@@ -24,7 +30,15 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     reporter: "",
     assignee: "",
   });
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
+  function handleSelectStatus(e: ChangeEvent<HTMLSelectElement>) {
+    e.stopPropagation();
+    const newStatus = e.target.value as TaskStatus;
+    if (newStatus) {
+      setSelectedStatus(newStatus);
+    }
+  }
   // Preenche o formulário se estiver no modo de edição ou visualização
   useEffect(() => {
     if (task) {
@@ -54,6 +68,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       if (mode === "create") {
         await createTask(formData);
       }
+
+      if (mode === "updateStatus") {
+        await moveTaskStatus(task?.id!, selectedStatus!);
+      }
     } finally {
       onClose();
     }
@@ -62,7 +80,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const isReadOnly = mode === "view";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-lg shadow-xl space-y-4">
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
           {mode === "create" && "Nova Tarefa"}
@@ -177,19 +195,36 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 </p>
                 <span>{task?.status}</span>
               </div>
-
               <MoveRight />
 
               <div>
-                <select>
-                  <option value="Selecione o novo status" disabled hidden>
+                <select onChange={(e) => handleSelectStatus(e)}>
+                  <option value="" disabled hidden>
                     Selecione o novo status
                   </option>
-                  <option value={TaskStatus.OPEN}>📋 Aberto</option>
-                  <option value={TaskStatus.DONE}>⚡ Em Progresso</option>
-                  <option value={TaskStatus.IN_PROGRESS}>🔍 Em Revisão</option>
-                  <option value={TaskStatus.UNDER_REVIEW}>✅ Concluído</option>
-                  <option value={TaskStatus.CANCELED}>✅ Concluído</option>
+                  {task?.status !== TaskStatus.OPEN && (
+                    <option value={TaskStatus.OPEN}>Aberto</option>
+                  )}
+
+                  {task?.status !== TaskStatus.IN_PROGRESS && (
+                    <option value={TaskStatus.IN_PROGRESS}>
+                      Em Progresso
+                    </option>
+                  )}
+
+                  {task?.status !== TaskStatus.UNDER_REVIEW && (
+                    <option value={TaskStatus.UNDER_REVIEW}>
+                      Em Revisão
+                    </option>
+                  )}
+
+                  {task?.status !== TaskStatus.DONE && (
+                    <option value={TaskStatus.DONE}>Concluído</option>
+                  )}
+
+                  {task?.status !== TaskStatus.CANCELED && (
+                    <option value={TaskStatus.CANCELED}>Cancelado</option>
+                  )}
                 </select>
               </div>
             </div>

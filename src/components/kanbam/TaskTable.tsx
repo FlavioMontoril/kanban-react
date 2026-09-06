@@ -8,48 +8,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TaskStatus, type Task } from "@/types/task";
-import { Circle, Clock, Eye, CheckCircle2, XCircle, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
+import { STATUS_CONFIG } from "./utils/border-color";
 
 interface ITaskTable {
   data: Task[];
 }
-
-// Configuração visual dos Badges de Status (mesmas cores da Kanban)
-const STATUS_CONFIG: Record<
-  TaskStatus,
-  { label: string; bg: string; text: string; icon: React.ReactNode }
-> = {
-  [TaskStatus.OPEN]: {
-    label: "Aberta",
-    bg: "bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800",
-    text: "text-indigo-700 dark:text-indigo-300",
-    icon: <Circle size={12} className="stroke-[2.5]" />,
-  },
-  [TaskStatus.IN_PROGRESS]: {
-    label: "Em Progresso",
-    bg: "bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800",
-    text: "text-amber-700 dark:text-amber-300",
-    icon: <Clock size={12} className="stroke-[2.5]" />,
-  },
-  [TaskStatus.UNDER_REVIEW]: {
-    label: "Em Revisão",
-    bg: "bg-purple-50 dark:bg-purple-950/50 border-purple-200 dark:border-purple-800",
-    text: "text-purple-700 dark:text-purple-300",
-    icon: <Eye size={12} className="stroke-[2.5]" />,
-  },
-  [TaskStatus.DONE]: {
-    label: "Concluído",
-    bg: "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800",
-    text: "text-emerald-700 dark:text-emerald-300",
-    icon: <CheckCircle2 size={12} className="stroke-[2.5]" />,
-  },
-  [TaskStatus.CANCELED]: {
-    label: "Cancelado",
-    bg: "bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800",
-    text: "text-red-700 dark:text-red-300",
-    icon: <XCircle size={12} className="stroke-[2.5]" />,
-  },
-};
 
 export function TableTask({ data }: ITaskTable) {
   // Métricas rápidas da tabela
@@ -57,14 +21,14 @@ export function TableTask({ data }: ITaskTable) {
     return {
       total: data.length,
       done: data.filter((t) => t.status === TaskStatus.DONE).length,
-      inProgress: data.filter((t) => t.status === TaskStatus.IN_PROGRESS).length,
+      inProgress: data.filter((t) => t.status === TaskStatus.IN_PROGRESS)
+        .length,
     };
   }, [data]);
 
   return (
     <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-0 md:p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
       <div className="w-full mx-auto space-y-4 flex flex-col h-full overflow-hidden">
-        
         {/* Cabeçalho Padronizado */}
         <header className="flex-none flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
           <div>
@@ -120,13 +84,18 @@ export function TableTask({ data }: ITaskTable) {
               <TableBody>
                 {data.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-32 text-center text-slate-400">
+                    <TableCell
+                      colSpan={5}
+                      className="h-32 text-center text-slate-400"
+                    >
                       Nenhuma tarefa encontrada.
                     </TableCell>
                   </TableRow>
                 ) : (
                   data.map((task) => {
-                    const status = STATUS_CONFIG[task.status] || STATUS_CONFIG[TaskStatus.OPEN];
+                    const status =
+                      STATUS_CONFIG[task.status] ||
+                      STATUS_CONFIG[TaskStatus.OPEN];
 
                     return (
                       <TableRow
@@ -188,7 +157,6 @@ export function TableTask({ data }: ITaskTable) {
             <span>Atualizado recentemente</span>
           </footer>
         </div>
-
       </div>
     </div>
   );
