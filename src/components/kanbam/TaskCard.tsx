@@ -2,13 +2,11 @@ import { Draggable } from "@hello-pangea/dnd";
 import { TaskStatus, type Task } from "@/types/task";
 import { TaskHoverCard } from "../commons/TaskHoverCard";
 import { TaskDropdownMenu } from "../commons/TaskDropdownMenuCard";
+import { useTaskModalStore } from "@/store/useTaskModalStore";
 
 interface TaskCardProps {
   task: Task;
   index: number;
-  onView: (task: Task) => void;
-  onEdit: (task: Task) => void;
-  onDelete: (id: string) => void;
 }
 
 const getBorderColor = (status: TaskStatus) => {
@@ -26,19 +24,19 @@ const getBorderColor = (status: TaskStatus) => {
   }
 };
 
-export const TaskCard: React.FC<TaskCardProps> = ({
-  task,
-  index,
-  onEdit,
-  onDelete,
-}) => {
-  function handleSelectAction(action: "edit" | "delete") {
+export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
+  const { openModal } = useTaskModalStore();
+
+  function handleSelectAction(action: "edit" | "delete" | "updateStatus") {
     if (action === "edit") {
-      onEdit(task);
+      openModal("edit", task);
     }
     if (action === "delete") {
-      onDelete(task.id);
-      return;
+      openModal("updateStatus", task);
+    }
+
+    if (action === "updateStatus") {
+      openModal("updateStatus", task);
     }
   }
 
@@ -62,28 +60,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               {task.code}
             </span>
             <div className="flex gap-0.5 text-slate-400 opacity-60 group-hover:opacity-100 transition-opacity">
-              {/* <button
-                onClick={() => onView(task)}
-                className="hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                <Eye size={14} />
-              </button> */}
               <TaskHoverCard task={task} />
-              <TaskDropdownMenu
-                onSelectAction={handleSelectAction}
-              />
-              {/* <button
-                onClick={() => onEdit(task)}
-                className="hover:text-indigo-600 dark:hover:text-indigo-400 p-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950"
-              >
-                <Edit size={14} />
-              </button>
-              <button
-                onClick={() => onDelete(task.id)}
-                className="hover:text-red-600 dark:hover:text-red-400 p-1 rounded hover:bg-red-50 dark:hover:bg-red-950"
-              >
-                <Trash2 size={14} />
-              </button> */}
+              <TaskDropdownMenu onSelectAction={handleSelectAction} />
             </div>
           </div>
 

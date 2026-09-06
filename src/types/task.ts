@@ -33,3 +33,19 @@ export const KANBAN_COLUMNS = [
   { id: TaskStatus.DONE, label: 'Concluído' },
   { id: TaskStatus.CANCELED, label: 'Cancelado' },
 ];
+
+export interface TasksCount {
+  total: number;
+  open: number;
+  inProgress: number;
+  underReview: number;
+  done: number;
+  canceled: number;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  page: number;
+  totalPage: number; // página atual
+  totalElements: number;
+}

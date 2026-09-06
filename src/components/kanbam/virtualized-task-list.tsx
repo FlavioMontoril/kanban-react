@@ -3,13 +3,18 @@ import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { TaskCard } from "./TaskCard";
 
-
 interface VirtualizedTaskListProps {
   columnTasks: Task[];
   onView: (task: Task) => void;
   onEdit: (task: Task) => void;
+  onUpdate: (task: Task) => void;
 }
-export function VirtualizedTaskList({ columnTasks, onView, onEdit }: VirtualizedTaskListProps) {
+export function VirtualizedTaskList({
+  columnTasks,
+  onView,
+  onEdit,
+  onUpdate,
+}: VirtualizedTaskListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const rowVirtualizer = useVirtualizer({
@@ -52,6 +57,7 @@ export function VirtualizedTaskList({ columnTasks, onView, onEdit }: Virtualized
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={() => {}}
+                onUpdateStatus={onUpdate}
               />
             </div>
           );
