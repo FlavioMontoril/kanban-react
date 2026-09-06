@@ -9,21 +9,6 @@ interface TaskCardProps {
   index: number;
 }
 
-const getBorderColor = (status: TaskStatus) => {
-  switch (status) {
-    case TaskStatus.OPEN:
-      return "border-l-indigo-500";
-    case TaskStatus.IN_PROGRESS:
-      return "border-l-amber-500";
-    case TaskStatus.UNDER_REVIEW:
-      return "border-l-purple-500";
-    case TaskStatus.DONE:
-      return "border-l-emerald-500";
-    case TaskStatus.CANCELED:
-      return "border-l-red-500";
-  }
-};
-
 export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const { openModal } = useTaskModalStore();
 
@@ -31,9 +16,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
     if (action === "edit") {
       openModal("edit", task);
     }
-    if (action === "delete") {
-      openModal("updateStatus", task);
-    }
+    // if (action === "delete") {
+    //   openModal("updateStatus", task);
+    // }
 
     if (action === "updateStatus") {
       openModal("updateStatus", task);
@@ -47,9 +32,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`w-full p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-l-4 ${getBorderColor(
-            task.status,
-          )} rounded-xl shadow-sm transition-all flex flex-col gap-3 group mb-3 select-none ${
+          className={`w-full p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-l-4 rounded-xl shadow-sm transition-all flex flex-col gap-3 group mb-3 select-none ${
             snapshot.isDragging
               ? "shadow-xl ring-2 ring-indigo-500/50 opacity-90"
               : "hover:shadow-md"
@@ -61,7 +44,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
             </span>
             <div className="flex gap-0.5 text-slate-400 opacity-60 group-hover:opacity-100 transition-opacity">
               <TaskHoverCard task={task} />
-              <TaskDropdownMenu onSelectAction={handleSelectAction} />
+
+              {task.status !== TaskStatus.CANCELED && (
+                <TaskDropdownMenu onSelectAction={handleSelectAction} />
+              )}
             </div>
           </div>
 

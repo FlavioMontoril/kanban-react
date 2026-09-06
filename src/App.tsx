@@ -14,8 +14,10 @@ import { useFlowStore } from "./components/flow/store/useFlowStore";
 type optionsView = "kanban" | "tabela" | "fluxo" | string;
 
 export default function App() {
-  const [selectedView, setSelectedView] = useState<optionsView>("kanban");
-  console.log("VIEW", selectedView);
+  const [selectedView, setSelectedView] = useState<optionsView>(() => {
+    return localStorage.getItem("view-mode") || "kanban";
+  });
+
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem("app-theme") === "dark";
   });
@@ -25,6 +27,7 @@ export default function App() {
   const { setSelectedTaskId } = useFlowStore();
 
   useEffect(() => {
+    localStorage.setItem("view-mode", selectedView);
     if (selectedView !== "fluxo") {
       setSelectedTaskId(null);
     }
@@ -46,7 +49,7 @@ export default function App() {
         <Toaster position="top-center" richColors />
         <div className="flex items-center justify-between p-5">
           <div className="flex items-center gap-3">
-            <TabsViews onSelect={setSelectedView} />
+            <TabsViews value={selectedView} onSelect={setSelectedView} />
             <button
               type="button"
               onClick={toggleTheme}

@@ -1,19 +1,18 @@
 import type { Task } from "@/types/task";
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { TaskCard } from "./TaskCard";
+import { Draggable, type DroppableProvided } from "@hello-pangea/dnd";
+import { TaskCardVirtualized } from "./TaskCardVirtualized";
 
 interface VirtualizedTaskListProps {
   columnTasks: Task[];
-  onView: (task: Task) => void;
-  onEdit: (task: Task) => void;
-  onUpdate: (task: Task) => void;
+  provided: DroppableProvided;
+  isDraggingOver: boolean;
 }
 export function VirtualizedTaskList({
   columnTasks,
-  onView,
-  onEdit,
-  onUpdate,
+  provided,
+  isDraggingOver,
 }: VirtualizedTaskListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -26,8 +25,17 @@ export function VirtualizedTaskList({
 
   return (
     <div
-      ref={parentRef}
-      className="flex-1 min-h-0 overflow-y-auto rounded-xl p-1 relative custom-scrollbar"
+      ref={(el) => {
+        // Conecta a ref do TanStack Virtual e a ref do DnD na mesma div
+        parentRef.current = el;
+        provided.innerRef(el);
+      }}
+      {...provided.droppableProps}
+      className={`flex-1 h-full overflow-y-auto rounded-xl transition-colors p-1 custom-scrollbar ${
+        isDraggingOver
+          ? "bg-indigo-50/50 dark:bg-indigo-950/30 ring-2 ring-indigo-200 dark:ring-indigo-800"
+          : ""
+      }`}
     >
       <div
         style={{
@@ -38,10 +46,10 @@ export function VirtualizedTaskList({
       >
         {rowVirtualizer.getVirtualItems().map((virtualItem) => {
           const task = columnTasks[virtualItem.index];
-
+          // console.log("Renderizando item virtual:", virtualItem.index);
           return (
             <div
-              key={virtualItem.key}
+              key={task.id}
               style={{
                 position: "absolute",
                 top: 0,
@@ -51,18 +59,22 @@ export function VirtualizedTaskList({
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >
-              <TaskCard
-                task={task}
-                index={virtualItem.index}
-                onView={onView}
-                onEdit={onEdit}
-                onDelete={() => {}}
-                onUpdateStatus={onUpdate}
-              />
+              {/* O Draggable envolve o card para permitir o arraste */}
+              <Draggable draggableId={task.id} index={virtualItem.index}>
+                {(draggableProvided, snapshot) => (
+                  <TaskCardVirtualized
+                    task={task}
+                    index={virtualItem.index}
+                    provided={draggableProvided}
+                    isDragging={snapshot.isDragging}
+                  />
+                )}
+              </Draggable>
             </div>
           );
         })}
       </div>
+      {provided.placeholder}
     </div>
   );
 }

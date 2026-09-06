@@ -4,11 +4,12 @@ import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 type optionsView = "kanban" | "tabela" | "fluxo" | string;
 
 interface ITabsViews {
+  value: optionsView;
   onSelect: (view: optionsView) => void;
 }
-export function TabsViews({ onSelect }: ITabsViews) {
+export function TabsViews({ value, onSelect }: ITabsViews) {
   return (
-    <Tabs defaultValue="preview" onValueChange={(value) => onSelect(value)}>
+    <Tabs value={value} onValueChange={(val) => onSelect(val as optionsView)}>
       <TabsList className="bg-slate-200 dark:bg-slate-900 border border-slate-200 gap-2">
         <TabsTrigger value="kanban" className="cursor-pointer ">
           <Kanban />
