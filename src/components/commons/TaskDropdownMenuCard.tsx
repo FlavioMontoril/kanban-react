@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis, PencilIcon, ShareIcon, TrashIcon } from "lucide-react";
+import { Ellipsis, PencilIcon, SendToBack, TrashIcon } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
 } from "../ui/dropdown-menu";
 
 interface ITaskDropdownMenu {
-  onSelectAction: (action: "edit" | "delete") => void;
+  onSelectAction: (action: "edit" | "delete" | "updateStatus") => void;
 }
 
 export function TaskDropdownMenu({ onSelectAction }: ITaskDropdownMenu) {
@@ -29,18 +29,18 @@ export function TaskDropdownMenu({ onSelectAction }: ITaskDropdownMenu) {
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={() => onSelectAction("edit")}>
             <PencilIcon />
-            Edit
+            Editar
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <ShareIcon />
-            Share
+          <DropdownMenuItem onClick={()=> onSelectAction("updateStatus")}>
+            <SendToBack />
+            Alterar status
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={() => onSelectAction("delete")} variant="destructive">
             <TrashIcon />
-            Delete
+            Deletar
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

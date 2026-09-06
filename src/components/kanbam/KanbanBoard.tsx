@@ -1,59 +1,32 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { useTasks } from "@/hooks/useTasks";
 import { KANBAN_COLUMNS, TaskStatus, type Task } from "@/types/task";
 import {
-  Plus,
   Clock,
   Eye,
   CheckCircle2,
   XCircle,
-  Sun,
-  Moon,
   Circle,
 } from "lucide-react";
-import { TaskModal } from "@/components/kanbam/TaskModal";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { TaskCard } from "./TaskCard";
 
-export default function KanbanBoard() {
-  const { tasks:dataTasks, loading, fetchTasks, createTask, moveTaskStatus } = useTasks();
+interface IKanbanBoard{
+  tasks: Task[]
+}
 
-  const tasks = Array.isArray(dataTasks) ? dataTasks : [];
+export default function KanbanBoard({tasks}: IKanbanBoard) {
+  const {
+    loading,
+    fetchTasks,
+    moveTaskStatus,
+  } = useTasks();
 
   // 1. Carrega as tarefas vindas do backend Spring Boot na montagem
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
-
-  // 2. Gerenciamento do Tema (Dark Mode) lendo/salvando no localStorage
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const savedTheme = localStorage.getItem("app-theme");
-    return savedTheme === "dark";
-  });
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("app-theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("app-theme", "light");
-    }
-  }, [isDarkMode]);
-
-  const toggleTheme = () => setIsDarkMode((prev) => !prev);
-
-  // 3. Controle de Estado do Modal
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean;
-    mode: "create" | "edit" | "view";
-    task: Task | null;
-  }>({
-    isOpen: false,
-    mode: "create",
-    task: null,
-  });
 
   // 4. Handler do Drag & Drop no Board
   const handleDragEnd = async (result: DropResult) => {
@@ -87,61 +60,31 @@ export default function KanbanBoard() {
     total: tasks.length,
     open: tasks.filter((t) => t.status === TaskStatus.OPEN).length,
     inProgress: tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length,
-    underReview: tasks.filter((t) => t.status === TaskStatus.UNDER_REVIEW).length,
+    underReview: tasks.filter((t) => t.status === TaskStatus.UNDER_REVIEW)
+      .length,
     done: tasks.filter((t) => t.status === TaskStatus.DONE).length,
     cancelado: tasks.filter((t) => t.status === TaskStatus.CANCELED).length,
   };
 
   return (
     <>
-      <Toaster position="top-center" richColors />
-
       {/* Wrapper Fixo: h-screen e overflow-hidden para travar a janela inteira */}
-      <div className="h-screen w-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col">
+      <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-0 md:p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
         <div className="w-full mx-auto space-y-4 flex flex-col h-full overflow-hidden">
           {/* Cabeçalho (Fixo) */}
           <header className="flex-none flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 dark:from-slate-100 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-extrabold tracking-tight bg-linear-to from-slate-900 via-indigo-950 to-indigo-900 dark:from-slate-100 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-black">
                 Kanban Board
               </h1>
               <div className="flex items-center">
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                 { `Gerenciador de Tarefas Inteligente -`}
+                  {`Gerenciador de Tarefas Inteligente -`}
                 </p>
                 <p className="text-md text-violet-800 dark:text-slate-400 mt-0.5 font-bold">
                   {` Total de: ${stats.total}`}
                 </p>
               </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                title={
-                  isDarkMode
-                    ? "Alternar para Modo Claro"
-                    : "Alternar para Modo Escuro"
-                }
-              >
-                {isDarkMode ? (
-                  <Sun size={18} className="text-amber-400" />
-                ) : (
-                  <Moon size={18} />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setModalState({ isOpen: true, mode: "create", task: null })
-                }
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 text-sm rounded-xl shadow-md transition cursor-pointer"
-              >
-                <Plus size={16} /> Nova Tarefa
-              </button>
             </div>
           </header>
 
@@ -242,7 +185,7 @@ export default function KanbanBoard() {
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className={`flex-1 min-h-0 overflow-y-auto rounded-xl transition-colors p-1 space-y-2 custom-scrollbar ${
+                          className={`flex-1 h-full overflow-y-auto rounded-xl transition-colors p-1 space-y-2 custom-scrollbar ${
                             snapshot.isDraggingOver
                               ? "bg-indigo-50/50 dark:bg-indigo-950/30 ring-2 ring-indigo-200 dark:ring-indigo-800 "
                               : ""
@@ -253,21 +196,28 @@ export default function KanbanBoard() {
                               key={task.id}
                               task={task}
                               index={index}
-                              onView={(t) =>
-                                setModalState({
-                                  isOpen: true,
-                                  mode: "view",
-                                  task: t,
-                                })
-                              }
-                              onEdit={(t) =>
-                                setModalState({
-                                  isOpen: true,
-                                  mode: "edit",
-                                  task: t,
-                                })
-                              }
-                              onDelete={() => {}}
+                              // onView={(t) =>
+                              //   setModalState({
+                              //     isOpen: true,
+                              //     mode: "view",
+                              //     task: t,
+                              //   })
+                              // }
+                              // onEdit={(t) =>
+                              //   setModalState({
+                              //     isOpen: true,
+                              //     mode: "edit",
+                              //     task: t,
+                              //   })
+                              // }
+                              // onUpdateStatus={(t) =>
+                              //   setModalState({
+                              //     isOpen: true,
+                              //     mode: "updateStatus",
+                              //     task: t,
+                              //   })
+                              // }
+                              // onDelete={() => {}}
                             />
                           ))}
                           {provided.placeholder}
@@ -280,21 +230,6 @@ export default function KanbanBoard() {
             </main>
           </DragDropContext>
         </div>
-
-        {/* Modal para Criação/Edição/Visualização */}
-        <TaskModal
-          isOpen={modalState.isOpen}
-          mode={modalState.mode}
-          task={modalState.task}
-          onClose={() =>
-            setModalState({ isOpen: false, mode: "create", task: null })
-          }
-          onSave={async (formData) => {
-            if (modalState.mode === "create") {
-              await createTask(formData);
-            }
-          }}
-        />
       </div>
     </>
   );

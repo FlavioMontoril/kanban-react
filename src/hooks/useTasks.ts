@@ -19,7 +19,7 @@ export function useTasks() {
       const data = await taskApi.findAll();
 
       setTasks(data);
-    } catch (error) {
+    } catch (error:any) {
       setError(error.response?.data?.message || "Erro ao buscar tarefas.");
       setTasks([]);
     } finally {
@@ -39,7 +39,7 @@ export function useTasks() {
       toast.success("Tarefa criada", {
         description: "A tarefa foi criada com sucesso.",
       });
-    } catch (error) {
+    } catch (error:any) {
       setError(error.response?.data?.message || "Erro ao criar tarefa.");
 
       toast.error("Erro ao criar tarefa", {
@@ -81,7 +81,7 @@ export function useTasks() {
       toast.success("Status atualizado", {
         description: `A tarefa foi movida para "${targetStatus}".`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Falha ao atualizar status:", error);
 
       // ↩️ Rollback
