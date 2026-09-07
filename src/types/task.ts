@@ -49,3 +49,10 @@ export interface PageResponse<T> {
   totalPage: number; // página atual
   totalElements: number;
 }
+
+export interface ColumnState {
+  tasks: Task[];
+  page: number;
+  hasMore: boolean;
+  totalElements: number;
+}

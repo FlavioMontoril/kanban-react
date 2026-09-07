@@ -5,10 +5,33 @@ import { taskApi } from "@/services/taskService";
 import { toast } from "sonner";
 
 export function useTasks() {
-  const { tasks, setTasks, moveTaskLocal } = useTaskStore();
+  const { tasks, setTasks, moveTaskLocal, pageData, setPageData, setCurrentPage, currentPage, size} = useTaskStore();
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchTasksPaged = useCallback(
+    async (status?: TaskStatus, page: number = 0, size: number = 10) => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await taskApi.findByStatusPaged(status, page, size);
+
+        setTasks(response.content);
+        setPageData(response);
+
+        return response;
+      } catch (error: any) {
+        setError(error.response?.data?.message || "Erro ao buscar tarefas paginadas.");
+        setTasks([]);
+        setPageData(null);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setTasks]
+  );
 
   // Buscar todas as tarefas
   const fetchTasks = useCallback(async () => {
@@ -101,9 +124,15 @@ export function useTasks() {
 
   return {
     tasks,
+    pageData,
     loading,
     error,
+    currentPage,
+    size,
+    setPageData,
+    setCurrentPage,
     fetchTasks,
+    fetchTasksPaged,
     createTask,
     moveTaskStatus,
   };

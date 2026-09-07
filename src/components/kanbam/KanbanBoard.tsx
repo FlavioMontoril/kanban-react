@@ -1,9 +1,7 @@
-import { useEffect } from "react";
 import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { useTasks } from "@/hooks/useTasks";
 import { KANBAN_COLUMNS, TaskStatus, type Task } from "@/types/task";
 import { toast } from "sonner";
-import { TaskCard } from "./TaskCard";
 import { getIcon, getIconColor } from "./utils/border-color";
 import { VirtualizedTaskList } from "./virtualized-task-list";
 
@@ -12,12 +10,7 @@ interface IKanbanBoard {
 }
 
 export default function KanbanBoard({ tasks }: IKanbanBoard) {
-  const { loading, fetchTasks, moveTaskStatus } = useTasks();
-
-  // 1. Carrega as tarefas vindas do backend Spring Boot na montagem
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+  const { loading, moveTaskStatus } = useTasks();
 
   // 4. Handler do Drag & Drop no Board
   const handleDragEnd = async (result: DropResult) => {

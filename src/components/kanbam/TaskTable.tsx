@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ChangeEvent } from "react";
 import {
   Table,
   TableBody,
@@ -8,23 +8,33 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TaskStatus, type Task } from "@/types/task";
-import { MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { STATUS_CONFIG } from "./utils/border-color";
+import { useTasks } from "@/hooks/useTasks";
 
 interface ITaskTable {
   data: Task[];
+  onSelectStaus: (status?: TaskStatus | null) => void;
 }
 
-export function TableTask({ data }: ITaskTable) {
-  // Métricas rápidas da tabela
+export function TableTask({ data, onSelectStaus }: ITaskTable) {
+  const { pageData, loading, setCurrentPage, currentPage } = useTasks();
+
+  function onHandleSelectStaus(e: ChangeEvent<HTMLSelectElement>) {
+    onSelectStaus(e.target.value as TaskStatus);
+  }
+
   const stats = useMemo(() => {
     return {
-      total: data.length,
+      total: pageData?.totalElements,
       done: data.filter((t) => t.status === TaskStatus.DONE).length,
       inProgress: data.filter((t) => t.status === TaskStatus.IN_PROGRESS)
         .length,
     };
   }, [data]);
+
+  const totalPages = pageData?.totalPage ?? 0;
+  const isLastPage = currentPage >= pageData?.totalPage!;
 
   return (
     <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-0 md:p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
@@ -54,6 +64,19 @@ export function TableTask({ data }: ITaskTable) {
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               {stats.done} concluídas
             </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <select
+              onChange={(e) => onHandleSelectStaus(e)}
+              className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            >
+              <option value="">Todos os Status</option>
+              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                <option key={key} value={key}>
+                  {config.label}
+                </option>
+              ))}
+            </select>
           </div>
         </header>
 
@@ -152,9 +175,39 @@ export function TableTask({ data }: ITaskTable) {
           </div>
 
           {/* Rodapé Informativo da Tabela */}
-          <footer className="flex-none px-5 py-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-xs text-slate-400 font-medium">
+          {/* <footer className="flex-none px-5 py-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-xs text-slate-400 font-medium">
             <span>Exibindo {data.length} registros</span>
             <span>Atualizado recentemente</span>
+          </footer> */}
+
+          {/* Rodapé com Navegação Ajustada */}
+          <footer className="flex-none px-5 py-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-xs text-slate-500 font-medium">
+            <div className="flex items-center gap-4">
+              <span>
+                Página {currentPage + 1} de {totalPages} ({data.length} de{" "}
+                {stats.total} itens)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={currentPage <= 0 || loading}
+                onClick={() => setCurrentPage(currentPage - 1)}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <button
+                type="button"
+                disabled={isLastPage || loading}
+                onClick={() => setCurrentPage(currentPage + 1)}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </footer>
         </div>
       </div>

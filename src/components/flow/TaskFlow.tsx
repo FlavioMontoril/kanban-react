@@ -16,13 +16,14 @@ import { MousePointerClick, Workflow } from "lucide-react";
 
 interface ITaskFlow {
   data: Task[];
+  isDarkMode?: boolean;
 }
 
 const NODE_TYPES = {
   square: Square,
 };
 
-export function TaskFlow({ data }: ITaskFlow) {
+export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
   const {
     nodes,
     edges,
@@ -88,10 +89,11 @@ export function TaskFlow({ data }: ITaskFlow) {
         </div>
       )}
       <ReactFlow
-        key={selectedTaskId ||
+        key={
+          selectedTaskId ||
           //  "all-nodes"
           "empty-flow"
-          } // Força re-render para centralizar ao trocar
+        } // Força re-render para centralizar ao trocar
         nodeTypes={NODE_TYPES}
         nodes={nodes}
         edges={edges}
@@ -99,6 +101,7 @@ export function TaskFlow({ data }: ITaskFlow) {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         connectionMode={ConnectionMode.Loose}
+        colorMode={isDarkMode ? "dark" : "light"} // Comentar se nao quiser usasr modo noturno
         fitView
         minZoom={0.1}
         maxZoom={2.5} // Limita o zoom máximo no tamanho 100% natural do card
@@ -107,9 +110,24 @@ export function TaskFlow({ data }: ITaskFlow) {
           padding: 0.3, // Mantém uma margem elegante em volta do nó
         }}
       >
-        <Background gap={12} size={2} color={colors.zinc[300]} />
+        {/* <Background gap={12} size={2} color={colors.zinc[300]} />
         <Controls />
-        <MiniMap />
+        <MiniMap /> */}
+        <Background
+          gap={12}
+          size={2}
+          color={isDarkMode ? colors.zinc[700] : colors.zinc[300]}
+        />
+        <Controls className="bg-white dark:[&>button]:!bg-slate-900 border border-slate-200 dark:border-slate-200 fill-slate-700 dark:fill-slate-200 text-slate-700 dark:text-slate-200 shadow-lg rounded-xl overflow-hidden [&>button]:border-slate-200 dark:[&>button]:border-slate-800 dark:[&>button]:hover:!bg-slate-500" />
+
+        {/* 🗺️ MiniMap estilizado com cores condicionalmente ajustadas */}
+        <MiniMap
+          className="bg-white dark:!bg-slate-900 border border-slate-200 dark:border-slate-800 !shadow-lg rounded-2xl overflow-hidden"
+          maskColor={
+            isDarkMode ? "rgba(15, 23, 42, 0.7)" : "rgba(241, 245, 249, 0.7)"
+          }
+          nodeColor={isDarkMode ? colors.violet[500] : colors.indigo[500]}
+        />
       </ReactFlow>
     </div>
   );
