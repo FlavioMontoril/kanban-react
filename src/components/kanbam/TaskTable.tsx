@@ -18,7 +18,7 @@ interface ITaskTable {
 }
 
 export function TableTask({ data, onSelectStaus }: ITaskTable) {
-  const { pageData, loading, setCurrentPage, currentPage } = useTasks();
+  const { pageData, loading, setCurrentPage, currentPage, size } = useTasks();
 
   function onHandleSelectStaus(e: ChangeEvent<HTMLSelectElement>) {
     onSelectStaus(e.target.value as TaskStatus);
@@ -34,8 +34,12 @@ export function TableTask({ data, onSelectStaus }: ITaskTable) {
   }, [data]);
 
   const totalPages = pageData?.totalPage ?? 0;
-  const isLastPage = currentPage >= pageData?.totalPage!;
-
+  const isLastPage = currentPage + 1 === pageData?.totalPage;
+  const totalTasksPages = Math.min(
+    size * (currentPage + 1),
+    pageData?.totalElements ?? data.length,
+  );
+  
   return (
     <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-0 md:p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
       <div className="w-full mx-auto space-y-4 flex flex-col h-full overflow-hidden">
@@ -184,7 +188,7 @@ export function TableTask({ data, onSelectStaus }: ITaskTable) {
           <footer className="flex-none px-5 py-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-xs text-slate-500 font-medium">
             <div className="flex items-center gap-4">
               <span>
-                Página {currentPage + 1} de {totalPages} ({data.length} de{" "}
+                Página {currentPage + 1} de {totalPages} ({totalTasksPages} de{" "}
                 {stats.total} itens)
               </span>
             </div>
