@@ -10,6 +10,7 @@ import { TableTask } from "./components/kanbam/TaskTable";
 import { SheetTask } from "./components/kanbam/SheetTask";
 import { TaskFlow } from "./components/flow/TaskFlow";
 import { useFlowStore } from "./components/flow/store/useFlowStore";
+import type { TaskStatus } from "./types/task";
 
 type optionsView = "kanban" | "tabela" | "fluxo" | string;
 
@@ -22,16 +23,47 @@ export default function App() {
     return localStorage.getItem("app-theme") === "dark";
   });
 
-  const { tasks: dataTasks } = useTasks();
-  const { isOpen, mode, task, openModal, closeModal } = useTaskModalStore();
+  const [tableStatus, setTableStatus] = useState<TaskStatus | null>(null);
+
   const { setSelectedTaskId } = useFlowStore();
+  const { isOpen, mode, task, openModal, closeModal } = useTaskModalStore();
+  const {
+    tasks: dataTasks,
+    fetchTasks,
+    fetchTasksPaged,
+    currentPage: page,
+    size,
+  } = useTasks();
+
+  // 1. Carrega as tarefas vindas do backend Spring Boot na montagem
+  useEffect(() => {
+    if (selectedView === "tabela") {
+      const cleanStatus = (tableStatus && tableStatus) || undefined;
+      fetchTasksPaged(cleanStatus, page, size);
+    } else {
+      fetchTasks();
+    }
+  }, [fetchTasks, fetchTasksPaged, tableStatus, page, size]);
 
   useEffect(() => {
     localStorage.setItem("view-mode", selectedView);
     if (selectedView !== "fluxo") {
       setSelectedTaskId(null);
     }
+    if (selectedView !== "tabela") {
+    setTableStatus(null);
+  }
   }, [selectedView]);
+  
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDarkMode) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [isDarkMode]);
 
   const toggleTheme = () => {
     setIsDarkMode((prev) => {
@@ -86,7 +118,12 @@ export default function App() {
         </div>
         <div className="flex-1 min-h-0 overflow-hidden">
           {selectedView === "kanban" && <KanbanBoard tasks={tasks} />}
-          {selectedView === "tabela" && <TableTask data={tasks} />}
+          {selectedView === "tabela" && (
+            <TableTask
+              onSelectStaus={(status) => setTableStatus(status ?? null)}
+              data={tasks}
+            />
+          )}
           {selectedView === "fluxo" && <TaskFlow data={tasks} />}
         </div>
       </div>
