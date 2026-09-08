@@ -3,12 +3,35 @@ import { useTaskStore } from "@/store/useTaskStore";
 import type { TaskRequestDTO, TaskStatus } from "@/types/task";
 import { taskApi } from "@/services/taskService";
 import { toast } from "sonner";
+import type { UserResponse } from "@/types/user";
 
 export function useTasks() {
-  const { tasks, setTasks, moveTaskLocal, pageData, setPageData, setCurrentPage, currentPage, size} = useTaskStore();
+  const {
+    tasks,
+    setTasks,
+    moveTaskLocal,
+    pageData,
+    setPageData,
+    setCurrentPage,
+    currentPage,
+    size,
+  } = useTaskStore();
 
+  const [users, setUsers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      const data = await taskApi.findAllUsers();
+      setUsers(data);
+      return data;
+    } catch (error: any) {
+      console.error("Erro ao carregar usuários:", error);
+      toast.error("Erro ao carregar usuários");
+      return [];
+    }
+  }, []);
 
   const fetchTasksPaged = useCallback(
     async (status?: TaskStatus, page: number = 0, size: number = 10) => {
@@ -23,14 +46,16 @@ export function useTasks() {
 
         return response;
       } catch (error: any) {
-        setError(error.response?.data?.message || "Erro ao buscar tarefas paginadas.");
+        setError(
+          error.response?.data?.message || "Erro ao buscar tarefas paginadas.",
+        );
         setTasks([]);
         setPageData(null);
       } finally {
         setLoading(false);
       }
     },
-    [setTasks]
+    [setTasks],
   );
 
   // Buscar todas as tarefas
@@ -42,7 +67,7 @@ export function useTasks() {
       const data = await taskApi.findAll();
 
       setTasks(data);
-    } catch (error:any) {
+    } catch (error: any) {
       setError(error.response?.data?.message || "Erro ao buscar tarefas.");
       setTasks([]);
     } finally {
@@ -62,7 +87,7 @@ export function useTasks() {
       toast.success("Tarefa criada", {
         description: "A tarefa foi criada com sucesso.",
       });
-    } catch (error:any) {
+    } catch (error: any) {
       setError(error.response?.data?.message || "Erro ao criar tarefa.");
 
       toast.error("Erro ao criar tarefa", {
@@ -124,6 +149,7 @@ export function useTasks() {
 
   return {
     tasks,
+    users,
     pageData,
     loading,
     error,
@@ -133,6 +159,7 @@ export function useTasks() {
     setCurrentPage,
     fetchTasks,
     fetchTasksPaged,
+    fetchUsers,
     createTask,
     moveTaskStatus,
   };

@@ -29,11 +29,17 @@ export default function App() {
   const { isOpen, mode, task, openModal, closeModal } = useTaskModalStore();
   const {
     tasks: dataTasks,
+    users,
+    fetchUsers,
     fetchTasks,
     fetchTasksPaged,
     currentPage: page,
     size,
   } = useTasks();
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   // 1. Carrega as tarefas vindas do backend Spring Boot na montagem
   useEffect(() => {
@@ -51,10 +57,9 @@ export default function App() {
       setSelectedTaskId(null);
     }
     if (selectedView !== "tabela") {
-    setTableStatus(null);
-  }
+      setTableStatus(null);
+    }
   }, [selectedView]);
-  
 
   useEffect(() => {
     const root = document.documentElement;
@@ -129,7 +134,7 @@ export default function App() {
       </div>
 
       {/* Modal para Criação/Edição/Visualização */}
-      <TaskModal isOpen={isOpen} mode={mode} task={task} onClose={closeModal} />
+      <TaskModal isOpen={isOpen} mode={mode} users={users} task={task} onClose={closeModal} />
     </div>
   );
 }

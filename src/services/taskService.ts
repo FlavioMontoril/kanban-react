@@ -6,9 +6,14 @@ import type {
   UpdateTaskStatusDTO,
 } from "@/types/task";
 import { api } from "./api";
+import type { UserResponse } from "@/types/user";
 
 export const taskApi = {
-  // Buscar todas as tarefas
+  findAllUsers: async (): Promise<UserResponse[]> => {
+    const response = await api.get<UserResponse[]>("/v1/user");
+    return response.data;
+  },
+
   findAll: async (): Promise<Task[]> => {
     const response = await api.get<Task[]>("/v1/task");
     return response.data;
