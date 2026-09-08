@@ -56,13 +56,15 @@ export function SheetTask({ data }: ITaskSheet) {
           </SheetDescription>
 
           {data.length > 0 && (
-            <button
-              type="button"
-              onClick={() => openModal("create")}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 text-sm rounded-xl shadow-md transition cursor-pointer"
-            >
-              <Plus size={16} /> Criar nova tarefa
-            </button>
+            <SheetClose>
+              <button
+                type="button"
+                onClick={() => openModal("create")}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 text-sm rounded-xl shadow-md transition cursor-pointer"
+              >
+                <Plus size={16} /> Criar nova tarefa
+              </button>
+            </SheetClose>
           )}
         </SheetHeader>
 
@@ -71,14 +73,15 @@ export function SheetTask({ data }: ITaskSheet) {
           {data.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-slate-400 text-sm">
               <p>Nenhuma tarefa disponível.</p>
-
-              <button
-                type="button"
-                onClick={() => openModal("create")}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 text-sm rounded-xl shadow-md transition cursor-pointer"
-              >
-                <Plus size={16} /> Criar
-              </button>
+              <SheetClose>
+                <button
+                  type="button"
+                  onClick={() => openModal("create")}
+                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 text-sm rounded-xl shadow-md transition cursor-pointer"
+                >
+                  <Plus size={16} /> Criar
+                </button>
+              </SheetClose>
             </div>
           ) : (
             data.map((task) => {

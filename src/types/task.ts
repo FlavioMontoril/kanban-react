@@ -16,11 +16,10 @@ export interface Task {
   assignee: string | null;
   createdAt: string;
   updatedAt: string | null;
+  userId?: string | null;
 }
 
-export type TaskRequestDTO = Pick<Task, 'code' | 'title' | 'description' | 'reporter' | 'assignee'> & {
-  assignee?: string | null;
-};
+export type TaskRequestDTO = Pick<Task, 'code' | 'title' | 'description' | 'reporter' | 'assignee' | 'userId'>
 
 export interface UpdateTaskStatusDTO {
   status: TaskStatus;

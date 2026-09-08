@@ -7,11 +7,14 @@ import React, {
 import { TaskStatus, type Task, type TaskRequestDTO } from "@/types/task";
 import { MoveRight } from "lucide-react";
 import { useTasks } from "@/hooks/useTasks";
+import { AssigneeSelect } from "../commons/AssigneeSelect";
+import type { UserResponse } from "@/types/user";
 
 interface TaskModalProps {
   isOpen: boolean;
   mode: "create" | "edit" | "view" | "updateStatus";
   task: Task | null;
+  users: UserResponse[];
   onClose: () => void;
 }
 
@@ -19,6 +22,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   isOpen,
   mode,
   task,
+  users,
   onClose,
 }) => {
   const { createTask, moveTaskStatus } = useTasks();
@@ -29,6 +33,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     description: "",
     reporter: "",
     assignee: "",
+    userId: "",
   });
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
@@ -48,6 +53,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         description: task.description,
         reporter: task.reporter,
         assignee: task.assignee || "",
+        userId: task.userId || "",
       });
     } else {
       setFormData({
@@ -56,6 +62,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         description: "",
         reporter: "",
         assignee: "",
+        userId: "",
       });
     }
   }, [task, isOpen]);
@@ -80,7 +87,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const isReadOnly = mode === "view";
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-lg shadow-xl space-y-4">
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
           {mode === "create" && "Nova Tarefa"}
@@ -161,7 +168,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 <label className="text-xs font-semibold text-slate-500">
                   Responsável (Assignee)
                 </label>
-                <input
+                {/* <input
                   type="text"
                   disabled={isReadOnly}
                   value={formData.assignee || ""}
@@ -170,6 +177,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                     setFormData({ ...formData, assignee: e.target.value })
                   }
                   className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm"
+                /> */}
+                <AssigneeSelect
+                  users={users}
+                  disabled={isReadOnly}
+                  value={formData.userId || ""}
+                  onChange={(selectedUserId) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      userId: selectedUserId,
+                      assignee:
+                        users.find((u) => u.id === selectedUserId)?.name || "",
+                    }));
+                  }}
                 />
               </div>
             </div>
@@ -207,15 +227,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   )}
 
                   {task?.status !== TaskStatus.IN_PROGRESS && (
-                    <option value={TaskStatus.IN_PROGRESS}>
-                      Em Progresso
-                    </option>
+                    <option value={TaskStatus.IN_PROGRESS}>Em Progresso</option>
                   )}
 
                   {task?.status !== TaskStatus.UNDER_REVIEW && (
-                    <option value={TaskStatus.UNDER_REVIEW}>
-                      Em Revisão
-                    </option>
+                    <option value={TaskStatus.UNDER_REVIEW}>Em Revisão</option>
                   )}
 
                   {task?.status !== TaskStatus.DONE && (
