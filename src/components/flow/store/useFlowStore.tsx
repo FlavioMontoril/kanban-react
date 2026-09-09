@@ -14,11 +14,12 @@ import {
 interface FlowState {
   nodes: Node[];
   edges: Edge[];
+  addChildNode: (parentId: string, nodeType: string) => void;
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
   addSquareNode: () => void;
-  deleteSquareNode: () => void;
+  deleteSquareNode: (nodeId: string) => void;
   setNodes: (nodes: Node[] | ((nodes: Node[]) => Node[])) => void;
   setEdges: (edges: Edge[] | ((edges: Edge[]) => Edge[])) => void;
   selectedTaskId: string | null; // ID da tarefa selecionada
@@ -40,6 +41,43 @@ export const useFlowStore = create<FlowState>()(
       nodes: [],
       edges: [],
       selectedTaskId: null,
+
+      // Cria um nó conectado ao nó pai
+      addChildNode: (parentId: string, nodeType: string) => {
+        const { nodes, edges } = get();
+        const parentNode = nodes.find((n) => n.id === parentId);
+
+        if (!parentNode) return;
+
+        const childId = crypto.randomUUID();
+        const parentTask = parentNode.data?.task;
+
+        const newChildNode: Node = {
+          id: childId,
+          type: nodeType,
+          position: {
+            x: parentNode.position.x + 320,
+            y: parentNode.position.y + 40,
+          },
+          data: { task: parentTask },
+        };
+
+        const newEdge: Edge = {
+          id: `edge-${parentId}-${childId}`,
+          source: parentId,
+          target: childId,
+          sourceHandle: "right",
+          targetHandle: "left",
+          // type: "smoothstep",
+          animated: true,
+          style: { stroke: "#8b5cf6", strokeWidth: 2 },
+        };
+
+        set({
+          nodes: [...nodes, newChildNode],
+          edges: [...edges, newEdge],
+        });
+      },
 
       setSelectedTaskId: (id) => set({ selectedTaskId: id }),
 
@@ -103,19 +141,17 @@ export const useFlowStore = create<FlowState>()(
         });
       },
 
-      deleteSquareNode: () => {
-        const { nodes, edges } = get();
+      deleteSquareNode: (nodeId: string) => {
+        const { nodes, edges, selectedTaskId } = get();
 
-        // Encontra o nó Square
-        const squareNode = nodes.find((node) => node.type === "square");
-        if (!squareNode) return;
+        const isMainTaskNode = nodeId === selectedTaskId;
 
         // Filtra removendo o nó Square e as conexões ligadas a ele
         set({
-          nodes: nodes.filter((node) => node.type !== "square"),
+          selectedTaskId: isMainTaskNode ? null : selectedTaskId,
+          nodes: nodes.filter((node) => node.id !== nodeId),
           edges: edges.filter(
-            (edge) =>
-              edge.source !== squareNode.id && edge.target !== squareNode.id,
+            (edge) => edge.source !== nodeId && edge.target !== nodeId,
           ),
         });
       },
