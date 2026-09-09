@@ -14,6 +14,7 @@ import colors from "tailwindcss/colors";
 import { MousePointerClick, Workflow } from "lucide-react";
 import { DetailsSquareComponents } from "./nodes/DetailsSquare";
 import { SquareComponent } from "./nodes/Square";
+import { HistorySquareComponents } from "./nodes/HistorySquare";
 
 interface ITaskFlow {
   data: Task[];
@@ -23,6 +24,7 @@ interface ITaskFlow {
 const NODE_TYPES = {
   square: SquareComponent,
   detailsSquare: DetailsSquareComponents,
+  historySquare: HistorySquareComponents,
 };
 
 export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
@@ -35,11 +37,12 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
     setNodes,
     setEdges,
     selectedTaskId,
+    hasHydrated,
   } = useFlowStore();
 
-  // Sincroniza o nó da tarefa selecionada com o estado do Zustand
   useEffect(() => {
-    // Se não houver tarefa selecionada, limpa a tela
+    if (!hasHydrated) return;
+
     if (!selectedTaskId || !data || data.length === 0) {
       setNodes([]);
       setEdges([]);
@@ -49,30 +52,37 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
     const task = data.find((t) => t.id === selectedTaskId);
 
     if (task) {
-      // ⚡ Pega os nós atuais sem se inscrever às re-renderizações de drag
       const currentNodes = useFlowStore.getState().nodes;
-      const currentMainNode = currentNodes.find((n) => n.type === "square");
 
-      // Se já estiver exibindo exatamente esse nó pai, não faz nada para preservar a posição/filhos
-      if (currentMainNode && currentMainNode.id === task.id) {
-        return;
+      // Verifica se a tarefa selecionada é a mesma que já está carregada no canvas
+      const isSameTaskRoot = currentNodes.some((n) => n.id === task.id);
+
+      // 💡 SE JÁ FOR A MESMA TAREFA (ex: ao dar F5/recarregar a página):
+      // Mantém os nós e filhos recuperados do localStorage e apenas atualiza os dados do nó raiz.
+      if (isSameTaskRoot) {
+        setNodes((prevNodes) =>
+          prevNodes.map((node) =>
+            node.id === task.id
+              ? { ...node, data: { ...node.data, task } }
+              : node,
+          ),
+        );
+      } else {
+        // 💡 SE TROCOU PARA UMA TAREFA DIFERENTE:
+        // Aí sim limpa o canvas e abre apenas o nó principal da nova tarefa.
+        setNodes([
+          {
+            id: task.id,
+            type: "square",
+            position: { x: 0, y: 0 },
+            style: { width: 280, height: 160 },
+            data: { task },
+          },
+        ]);
+        setEdges([]);
       }
-
-      // Ao trocar para uma nova tarefa, substitui o fluxo pelo nó pai da nova task
-      setNodes([
-        {
-          id: task.id,
-          type: "square",
-          position: { x: 0, y: 0 },
-          style: { width: 280, height: 160 },
-          data: { task },
-        },
-      ]);
-
-      // Limpa as conexões da tarefa anterior
-      setEdges([]);
     }
-  }, [selectedTaskId, data, setNodes, setEdges]);
+  }, [selectedTaskId, data, setNodes, setEdges, hasHydrated]);
 
   return (
     <div className="w-full h-full relative bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
@@ -117,6 +127,7 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
         fitViewOptions={{
           maxZoom: 1, // Impede que o fitView dê zoom excessivo em nós únicos
           padding: 0.3, // Mantém uma margem elegante em volta do nó
+          duration: 300, // 👈 Anima a câmera suavemente para ajustar o foco após criar o nó
         }}
       >
         {/* <Background gap={12} size={2} color={colors.zinc[300]} />
