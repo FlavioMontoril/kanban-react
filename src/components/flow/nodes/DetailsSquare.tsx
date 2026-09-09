@@ -1,0 +1,146 @@
+import { memo } from "react";
+import {
+  Handle,
+  Position,
+  // NodeResizer,
+  type NodeProps,
+  type Node,
+} from "@xyflow/react";
+import {
+  Trash2,
+  User,
+  UserCheck,
+  Calendar,
+  AlignLeft,
+  Info,
+} from "lucide-react";
+import { useFlowStore } from "../store/useFlowStore";
+import type { SquareNodeData } from "./Square";
+
+function DetailsSquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
+  const deleteSquareNode = useFlowStore((state) => state.deleteSquareNode);
+  const task = data?.task;
+
+  // Formatação de datas
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "—";
+    return new Date(dateString).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  return (
+    <>
+      {/* <NodeResizer
+        minWidth={240}
+        minHeight={200}
+        keepAspectRatio={false}
+        lineClassName="!border-emerald-400/50"
+        handleClassName="!bg-emerald-500 !border-2 !border-white !w-2.5 !h-2.5 !rounded-full"
+      /> */}
+
+      <div className="bg-white dark:bg-slate-900 border-2 border-emerald-500 dark:border-emerald-600 rounded-2xl w-full h-full relative flex flex-col shadow-xl transition-colors">
+        {/* Handle de Conexão */}
+        <Handle
+          id="left"
+          type="target"
+          position={Position.Left}
+          className="!-left-2.5 !w-3 !h-3 !border-2 !bg-white !border-emerald-500 !z-50 cursor-crosshair"
+        />
+
+        <div className="w-full h-full flex flex-col overflow-hidden rounded-[14px]">
+          {/* Cabeçalho */}
+          <div className="bg-emerald-600 dark:bg-emerald-700 h-9 px-3 flex items-center justify-between flex-none">
+            <div className="flex items-center gap-1.5 text-white">
+              <Info size={14} />
+              <span className="font-mono text-xs font-bold tracking-wide">
+                Detalhes: {task?.code || `#${id.slice(0, 5)}`}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => deleteSquareNode(id)}
+              className="text-white/80 hover:text-white hover:bg-emerald-500/60 p-1 rounded-md transition-colors cursor-pointer border-none bg-transparent"
+              title="Apagar nó de detalhes"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+
+          {/* Conteúdo Detalhado */}
+          <div className="flex-1 p-3 flex flex-col justify-between gap-3 overflow-y-auto custom-scrollbar">
+            {/* Seção 1: Descrição */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <AlignLeft size={12} />
+                <span>Descrição</span>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-100 dark:border-slate-800 leading-relaxed font-normal">
+                {task?.description || "Nenhuma descrição informada."}
+              </p>
+            </div>
+
+            {/* Seção 2: Pessoas Envolvidas */}
+            <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Pessoas
+              </span>
+              
+              <div className="grid grid-cols-1 gap-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <User size={13} className="text-slate-400 shrink-0" />
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">
+                    Relator:
+                  </span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] truncate">
+                    {task?.reporter || "Não informado"}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <UserCheck size={13} className="text-emerald-500 shrink-0" />
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">
+                    Responsável:
+                  </span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] truncate">
+                    {task?.assignee || "Não atribuído"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Seção 3: Histórico de Datas */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1 text-[10px] text-slate-400">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <Calendar size={11} /> Criado em:
+                </span>
+                <span className="font-mono text-slate-600 dark:text-slate-300">
+                  {formatDate(task?.createdAt)}
+                </span>
+              </div>
+
+              {task?.updatedAt && (
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <Calendar size={11} /> Atualizado:
+                  </span>
+                  <span className="font-mono text-slate-600 dark:text-slate-300">
+                    {formatDate(task?.updatedAt)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export const DetailsSquareComponents = memo(DetailsSquare);

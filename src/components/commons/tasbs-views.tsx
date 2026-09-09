@@ -1,7 +1,7 @@
-import { Kanban, Table, Workflow } from "lucide-react";
+import { GitMerge, Kanban } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 
-type optionsView = "kanban" | "tabela" | "fluxo" | string;
+type optionsView = "kanban" | "Workflows" | string;
 
 interface ITabsViews {
   value: optionsView;
@@ -15,13 +15,9 @@ export function TabsViews({ value, onSelect }: ITabsViews) {
           <Kanban />
           Kanban
         </TabsTrigger>
-        <TabsTrigger value="tabela" className="cursor-pointer">
-          <Table />
-          Tabela
-        </TabsTrigger>
-        <TabsTrigger value="fluxo" className="cursor-pointer">
-          <Workflow />
-          Fluxo
+        <TabsTrigger value="Workflows" className="cursor-pointer">
+          <GitMerge />
+          Workflows
         </TabsTrigger>
       </TabsList>
     </Tabs>

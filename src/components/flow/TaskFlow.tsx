@@ -9,10 +9,11 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import { Square } from "./nodes/Square";
 import { useFlowStore } from "./store/useFlowStore";
 import colors from "tailwindcss/colors";
 import { MousePointerClick, Workflow } from "lucide-react";
+import { DetailsSquareComponents } from "./nodes/DetailsSquare";
+import { SquareComponent } from "./nodes/Square";
 
 interface ITaskFlow {
   data: Task[];
@@ -20,7 +21,8 @@ interface ITaskFlow {
 }
 
 const NODE_TYPES = {
-  square: Square,
+  square: SquareComponent,
+  detailsSquare: DetailsSquareComponents,
 };
 
 export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
@@ -31,28 +33,32 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
     onEdgesChange,
     onConnect,
     setNodes,
+    setEdges,
     selectedTaskId,
   } = useFlowStore();
 
   // Sincroniza o nó da tarefa selecionada com o estado do Zustand
   useEffect(() => {
-    // Se não houver tarefa selecionada, limpa os nós do fluxo
+    // Se não houver tarefa selecionada, limpa a tela
     if (!selectedTaskId || !data || data.length === 0) {
       setNodes([]);
+      setEdges([]);
       return;
     }
 
     const task = data.find((t) => t.id === selectedTaskId);
 
     if (task) {
-      // Se o nó atual já for o nó da tarefa selecionada, não sobrescreve
-      // para não perder as alterações de posição ou tamanho feitas pelo usuário
-      const currentNode = nodes[0];
-      if (currentNode && currentNode.id === task.id) {
+      // ⚡ Pega os nós atuais sem se inscrever às re-renderizações de drag
+      const currentNodes = useFlowStore.getState().nodes;
+      const currentMainNode = currentNodes.find((n) => n.type === "square");
+
+      // Se já estiver exibindo exatamente esse nó pai, não faz nada para preservar a posição/filhos
+      if (currentMainNode && currentMainNode.id === task.id) {
         return;
       }
 
-      // Cria o novo nó no Zustand
+      // Ao trocar para uma nova tarefa, substitui o fluxo pelo nó pai da nova task
       setNodes([
         {
           id: task.id,
@@ -62,8 +68,11 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
           data: { task },
         },
       ]);
+
+      // Limpa as conexões da tarefa anterior
+      setEdges([]);
     }
-  }, [selectedTaskId, data, setNodes]);
+  }, [selectedTaskId, data, setNodes, setEdges]);
 
   return (
     <div className="w-full h-full relative bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
@@ -89,11 +98,11 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
         </div>
       )}
       <ReactFlow
-        key={
-          selectedTaskId ||
-          //  "all-nodes"
-          "empty-flow"
-        } // Força re-render para centralizar ao trocar
+        // key={
+        //   selectedTaskId ||
+        //   //  "all-nodes"
+        //   "empty-flow"
+        // } // Força re-render para centralizar ao trocar
         nodeTypes={NODE_TYPES}
         nodes={nodes}
         edges={edges}

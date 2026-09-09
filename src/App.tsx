@@ -7,12 +7,16 @@ import { useTasks } from "./hooks/useTasks";
 import { TaskModal } from "./components/kanbam/TaskModal";
 import { useTaskModalStore } from "./store/useTaskModalStore";
 import { TableTask } from "./components/kanbam/TaskTable";
-import { SheetTask } from "./components/kanbam/SheetTask";
 import { TaskFlow } from "./components/flow/TaskFlow";
 import { useFlowStore } from "./components/flow/store/useFlowStore";
 import type { TaskStatus } from "./types/task";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "./components/ui/resizable";
 
-type optionsView = "kanban" | "tabela" | "fluxo" | string;
+type optionsView = "kanban" | "Workflows" | string;
 
 export default function App() {
   const [selectedView, setSelectedView] = useState<optionsView>(() => {
@@ -25,7 +29,7 @@ export default function App() {
 
   const [tableStatus, setTableStatus] = useState<TaskStatus | null>(null);
 
-  const { setSelectedTaskId } = useFlowStore();
+  const { setSelectedTaskId, selectedTaskId } = useFlowStore();
   const { isOpen, mode, task, openModal, closeModal } = useTaskModalStore();
   const {
     tasks: dataTasks,
@@ -43,7 +47,7 @@ export default function App() {
 
   // 1. Carrega as tarefas vindas do backend Spring Boot na montagem
   useEffect(() => {
-    if (selectedView === "tabela") {
+    if (selectedView === "Workflows") {
       const cleanStatus = (tableStatus && tableStatus) || undefined;
       fetchTasksPaged(cleanStatus, page, size);
     } else {
@@ -53,10 +57,8 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem("view-mode", selectedView);
-    if (selectedView !== "fluxo") {
+    if (selectedView !== "Workflows") {
       setSelectedTaskId(null);
-    }
-    if (selectedView !== "tabela") {
       setTableStatus(null);
     }
   }, [selectedView]);
@@ -104,37 +106,52 @@ export default function App() {
               )}
             </button>
           </div>
-
-          {selectedView === "fluxo" ? (
-            <>
-              <SheetTask data={tasks} />
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => openModal("create")}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 text-sm rounded-xl shadow-md transition cursor-pointer"
-              >
-                <Plus size={16} /> Nova Tarefa
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            onClick={() => openModal("create")}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 text-sm rounded-xl shadow-md transition cursor-pointer"
+          >
+            <Plus size={16} /> Nova Tarefa
+          </button>
         </div>
         <div className="flex-1 min-h-0 overflow-hidden">
           {selectedView === "kanban" && <KanbanBoard tasks={tasks} />}
-          {selectedView === "tabela" && (
-            <TableTask
-              onSelectStaus={(status) => setTableStatus(status ?? null)}
-              data={tasks}
-            />
+          {selectedView === "Workflows" && (
+            <ResizablePanelGroup
+              key={selectedTaskId ? "split-mode" : "full-mode"}
+              orientation="horizontal"
+              className="min-h-[200px] w-full rounded-lg border"
+            >
+              <ResizablePanel
+                defaultSize={selectedTaskId ? 30 : 100}
+                minSize={500}
+              >
+                <TableTask
+                  onSelectStaus={(status) => setTableStatus(status ?? null)}
+                  data={tasks}
+                />
+              </ResizablePanel>
+              {selectedTaskId && (
+                <>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize="70%">
+                    <TaskFlow data={tasks} />
+                  </ResizablePanel>
+                </>
+              )}
+            </ResizablePanelGroup>
           )}
-          {selectedView === "fluxo" && <TaskFlow data={tasks} />}
         </div>
       </div>
 
       {/* Modal para Criação/Edição/Visualização */}
-      <TaskModal isOpen={isOpen} mode={mode} users={users} task={task} onClose={closeModal} />
+      <TaskModal
+        isOpen={isOpen}
+        mode={mode}
+        users={users}
+        task={task}
+        onClose={closeModal}
+      />
     </div>
   );
 }
