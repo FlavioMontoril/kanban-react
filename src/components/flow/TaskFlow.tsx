@@ -129,6 +129,7 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
           padding: 0.3, // Mantém uma margem elegante em volta do nó
           duration: 300, // 👈 Anima a câmera suavemente para ajustar o foco após criar o nó
         }}
+        // noWheelClassName="nowheel"
       >
         {/* <Background gap={12} size={2} color={colors.zinc[300]} />
         <Controls />

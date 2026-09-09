@@ -4,6 +4,7 @@ import type { TaskRequestDTO, TaskStatus } from "@/types/task";
 import { taskApi } from "@/services/taskService";
 import { toast } from "sonner";
 import type { UserResponse } from "@/types/user";
+import { useTaskHistoryStore } from "@/store/useTaskHistories";
 
 export function useTasks() {
   const {
@@ -16,6 +17,8 @@ export function useTasks() {
     currentPage,
     size,
   } = useTaskStore();
+
+  const { setTaskHistories } = useTaskHistoryStore();
 
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -74,6 +77,21 @@ export function useTasks() {
       setLoading(false);
     }
   }, [setTasks]);
+
+  const fetchTasksHistories = useCallback(async (taskId: string) => {
+    setLoading(false);
+    setError(null);
+
+    try {
+      const data = await taskApi.findAllHistories(taskId);
+      setTaskHistories(data);
+      console.log("HISTORIES", data)
+      return data;
+    } catch (Erro: any) {
+      console.error("Erro ao carregar usuários:", error);
+      return [];
+    }
+  }, []);
 
   // Criar tarefa
   const createTask = async (formData: TaskRequestDTO) => {
@@ -160,6 +178,7 @@ export function useTasks() {
     fetchTasks,
     fetchTasksPaged,
     fetchUsers,
+    fetchTasksHistories,
     createTask,
     moveTaskStatus,
   };

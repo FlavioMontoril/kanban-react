@@ -43,7 +43,7 @@ function DetailsSquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
         handleClassName="!bg-emerald-500 !border-2 !border-white !w-2.5 !h-2.5 !rounded-full"
       /> */}
 
-      <div className="bg-white dark:bg-slate-900 border-2 border-emerald-500 dark:border-emerald-600 rounded-2xl w-full h-full relative flex flex-col shadow-xl transition-colors">
+      <div className="bg-white dark:bg-slate-900 border-2 border-emerald-500 dark:border-emerald-600 rounded-2xl w-full h-full relative flex flex-col shadow-xl transition-all hover:shadow-2xl ">
         {/* Handle de Conexão */}
         <Handle
           id="left"

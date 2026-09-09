@@ -7,6 +7,7 @@ import type {
 } from "@/types/task";
 import { api } from "./api";
 import type { UserResponse } from "@/types/user";
+import type { TaskHistories } from "@/types/task-history";
 
 export const taskApi = {
   findAllUsers: async (): Promise<UserResponse[]> => {
@@ -55,6 +56,11 @@ export const taskApi = {
       return null;
     }
 
+    return response.data;
+  },
+
+  findAllHistories: async (taskId: string): Promise<TaskHistories[]> => {
+    const response = await api.get(`/v1/tasks-histories/${taskId}`);
     return response.data;
   },
 };

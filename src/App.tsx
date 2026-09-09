@@ -37,6 +37,7 @@ export default function App() {
     fetchUsers,
     fetchTasks,
     fetchTasksPaged,
+    fetchTasksHistories,
     currentPage: page,
     size,
   } = useTasks();
@@ -44,6 +45,20 @@ export default function App() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (selectedTaskId) {
+      fetchTasksHistories(selectedTaskId).then(() => {
+        if (!isMounted) return;
+      });
+    }
+
+    return () => {
+      isMounted = false; // Cancela atualizações de requisições antigas
+    };
+  }, [selectedTaskId, fetchTasksHistories]);
 
   // 1. Carrega as tarefas vindas do backend Spring Boot na montagem
   useEffect(() => {
