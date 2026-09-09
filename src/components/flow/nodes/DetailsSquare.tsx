@@ -18,7 +18,7 @@ import { useFlowStore } from "../store/useFlowStore";
 import type { SquareNodeData } from "./Square";
 
 function DetailsSquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
-  const deleteSquareNode = useFlowStore((state) => state.deleteSquareNode);
+  const deleteSquareNode = useFlowStore((state) => state.deleteNodeCascade);
   const task = data?.task;
 
   // Formatação de datas
@@ -49,7 +49,7 @@ function DetailsSquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
           id="left"
           type="target"
           position={Position.Left}
-          className="!-left-2.5 !w-3 !h-3 !border-2 !bg-white !border-emerald-500 !z-50 cursor-crosshair"
+          className="!-left-2.5 !w-2 !h-2 !border-2 !bg-white !border-emerald-500 !z-50 cursor-crosshair"
         />
 
         <div className="w-full h-full flex flex-col overflow-hidden rounded-[14px]">

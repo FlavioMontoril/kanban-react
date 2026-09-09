@@ -5,7 +5,7 @@ import {
   type NodeProps,
   type Node,
 } from "@xyflow/react";
-import { Trash2, User, Info } from "lucide-react";
+import { Trash2, User, Info, History } from "lucide-react";
 import { useFlowStore } from "../store/useFlowStore";
 import { TaskStatus, type Task } from "@/types/task";
 import { memo } from "react";
@@ -18,8 +18,26 @@ export type SquareNodeData = {
 export type SquareNode = Node<SquareNodeData, "square">;
 
 function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
-  const deleteSquareNode = useFlowStore((state) => state.deleteSquareNode);
+  const deleteSquareNode = useFlowStore((state) => state.deleteNodeCascade);
   const addChildNode = useFlowStore((state) => state.addChildNode);
+  const edges = useFlowStore((state) => state.edges);
+  const nodes = useFlowStore((state) => state.nodes);
+
+  // Verifica se este card pai já tem um filho 'detailsSquare' conectado
+  const hasDetailsChild = edges.some(
+    (edge) =>
+      edge.source === id &&
+      nodes.some(
+        (node) => node.id === edge.target && node.type === "detailsSquare",
+      ),
+  );
+  const hasHistoryChild = edges.some(
+    (edge) =>
+      edge.source === id &&
+      nodes.some(
+        (node) => node.id === edge.target && node.type === "historySquare",
+      ),
+  );
 
   const task = data.task;
 
@@ -43,16 +61,16 @@ function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
         {/* Handles com z-index alto colocados na raiz do card */}
         <Handle
           id="left"
-          type="target"
+          type="source"
           position={Position.Left}
-          className="!-left-2.5 !w-3 !h-3 !border-2 !bg-white !border-violet-300 !z-50"
+          className="!-left-2.5 !w-2 !h-2 !border-2 !bg-white !border-violet-300 !z-50"
         />
 
         <Handle
           id="right"
           type="source"
           position={Position.Right}
-          className="!-right-2.5 !w-3 !h-3 !border-2 !bg-white !border-violet-300 !z-50"
+          className="!-right-2.5 !w-2 !h-2 !border-2 !bg-white !border-violet-300 !z-50"
         />
 
         {/* Div interna para aplicar o arredondamento e scroll do conteúdo sem cortar os Handles */}
@@ -66,19 +84,49 @@ function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => addChildNode(id, "detailsSquare")}
-                className="text-white/80 hover:text-white hover:bg-violet-600/60 dark:hover:bg-violet-700/60 p-1 rounded-md transition-colors cursor-pointer border-none bg-transparent"
-                title="Adicionar nó conectado"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  addChildNode(id, "historySquare");
+                }}
+                className={`p-1 rounded-md transition-colors border-none bg-transparent 
+                  ${
+                    hasHistoryChild
+                      ? "text-white/40 cursor-not-allowed"
+                      : "text-white/80 hover:text-white hover:bg-violet-600/60 cursor-pointer"
+                  }
+                `}
+                title={
+                  hasHistoryChild ? "Historico já exibidos" : "Exibir histórico"
+                }
+              >
+                <History size={15} />
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  addChildNode(id, "detailsSquare");
+                }}
+                className={`p-1 rounded-md transition-colors border-none bg-transparent ${
+                  hasDetailsChild
+                    ? "text-white/40 cursor-not-allowed"
+                    : "text-white/80 hover:text-white hover:bg-violet-600/60 cursor-pointer"
+                }`}
+                title={
+                  hasDetailsChild ? "Detalhes já exibidos" : "Exibir detalhes"
+                }
               >
                 <Info size={15} />
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   deleteSquareNode(id);
                 }}
                 className="text-white/80 hover:text-white hover:bg-violet-600/60 dark:hover:bg-violet-700/60 p-1 rounded-md transition-colors cursor-pointer border-none bg-transparent"
-                title="Apagar nó"
+                title="Fechar tarefa"
               >
                 <Trash2 size={15} />
               </button>
