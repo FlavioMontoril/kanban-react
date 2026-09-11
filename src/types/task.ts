@@ -16,6 +16,7 @@ export interface Task {
   assignee: string | null;
   createdAt: string;
   updatedAt: string | null;
+  archived: boolean;
   userId?: string | null;
 }
 

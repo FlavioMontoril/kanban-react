@@ -21,9 +21,10 @@ export const taskApi = {
   },
 
   findByStatusPaged: async (
-    status?: TaskStatus,
+    status?: TaskStatus | null,
+    search?: string | null,
     page: number = 0,
-    size: number = 10,
+    size: number = 20,
   ): Promise<PageResponse<Task>> => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -32,6 +33,9 @@ export const taskApi = {
 
     if (status) {
       params.append("status", status);
+    }
+    if (search && search.trim() !== "") {
+      params.append("search", search.trim());
     }
     const response = await api.get<PageResponse<Task>>(
       `/v1/task/paged?${params.toString()}`,

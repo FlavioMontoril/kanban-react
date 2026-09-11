@@ -1,14 +1,17 @@
+import { Handle, Position, type NodeProps, type Node } from "@xyflow/react";
 import {
-  Handle,
-  Position,
-  type NodeProps,
-  type Node,
-} from "@xyflow/react";
-import { Trash2, User, Info, History, FolderKanban, Calendar } from "lucide-react";
+  Trash2,
+  User,
+  Info,
+  History,
+  FolderKanban,
+  Calendar,
+} from "lucide-react";
 import { useFlowStore } from "../store/useFlowStore";
 import { TaskStatus, type Task } from "@/types/task";
 import { memo } from "react";
 import { STATUS_CONFIG } from "@/components/kanbam/utils/border-color";
+import { useTaskHistoryStore } from "@/store/useTaskHistories";
 
 export type SquareNodeData = {
   task?: Task;
@@ -21,6 +24,7 @@ function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
   const addChildNode = useFlowStore((state) => state.addChildNode);
   const edges = useFlowStore((state) => state.edges);
   const nodes = useFlowStore((state) => state.nodes);
+  const histories = useTaskHistoryStore((state) => state.histories);
 
   const hasDetailsChild = edges.some(
     (edge) =>
@@ -92,7 +96,9 @@ function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
                   ? "text-white/30 cursor-not-allowed"
                   : "text-white/80 hover:text-white hover:bg-white/10 cursor-pointer"
               }`}
-              title={hasHistoryChild ? "Histórico já exibido" : "Exibir histórico"}
+              title={
+                hasHistoryChild ? "Histórico já exibido" : "Exibir histórico"
+              }
             >
               <History size={14} />
             </button>
@@ -108,7 +114,9 @@ function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
                   ? "text-white/30 cursor-not-allowed"
                   : "text-white/80 hover:text-white hover:bg-white/10 cursor-pointer"
               }`}
-              title={hasDetailsChild ? "Detalhes já exibidos" : "Exibir detalhes"}
+              title={
+                hasDetailsChild ? "Detalhes já exibidos" : "Exibir detalhes"
+              }
             >
               <Info size={14} />
             </button>
@@ -130,10 +138,18 @@ function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
         {/* Conteúdo Central */}
         <div className="flex-1 p-3 flex flex-col justify-between bg-slate-50/50 dark:bg-slate-900/50 gap-2">
           {/* Título da Tarefa */}
-          <div>
+          <div className="flex flex-col">
             <h4 className="text-xs font-semibold text-slate-800 dark:text-slate-100 line-clamp-2 leading-relaxed tracking-tight">
               {task?.title || "Sem título informado"}
             </h4>
+            <div className="flex gap-1 ">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-100 line-clamp-2 leading-relaxed tracking-tight">
+                {histories?.length || "0"}
+              </span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-100 line-clamp-2 leading-relaxed tracking-tight">
+                {histories && "ocorrencias"}
+              </span>
+            </div>
           </div>
 
           {/* Rodapé: Status, Relator e Data de Criação */}
@@ -149,7 +165,7 @@ function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
 
               {/* Data de Criação */}
               {formattedCreatedAt && (
-                <div 
+                <div
                   className="flex items-center gap-1 text-[10px] font-mono text-slate-400 dark:text-slate-500"
                   title="Data de criação"
                 >

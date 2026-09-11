@@ -15,16 +15,23 @@ import { useFlowStore } from "../flow/store/useFlowStore";
 
 interface ITaskTable {
   data: Task[];
-  onSelectStaus: (status?: TaskStatus | null) => void;
 }
 
-export function TableTask({ data, onSelectStaus }: ITaskTable) {
-  const { pageData, loading, setCurrentPage, currentPage, size } = useTasks();
+export function TableTask({ data }: ITaskTable) {
+  const {
+    pageData,
+    currentPage,
+    size,
+    loading,
+    selectedStatus,
+    setCurrentPage,
+    setStatus,
+  } = useTasks();
   const { selectedTaskId, setSelectedTaskId } = useFlowStore();
 
-  function onHandleSelectStaus(e: ChangeEvent<HTMLSelectElement>) {
-    onSelectStaus(e.target.value as TaskStatus);
-  }
+  // function onHandleSelectStaus(e: ChangeEvent<HTMLSelectElement>) {
+  //   setStatus(e.target.value as TaskStatus);
+  // }
 
   const stats = useMemo(() => {
     return {
@@ -74,8 +81,9 @@ export function TableTask({ data, onSelectStaus }: ITaskTable) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
+          {/* <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
             <select
+              value={selectedStatus || ""}
               onChange={(e) => onHandleSelectStaus(e)}
               className="w-full lg:w-auto text-xs font-semibold px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
@@ -86,7 +94,7 @@ export function TableTask({ data, onSelectStaus }: ITaskTable) {
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
         </header>
 
         {/* Container da Tabela com Scroll Independente */}
