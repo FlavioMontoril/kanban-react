@@ -1,24 +1,29 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTaskStore } from "@/store/useTaskStore";
 import type { TaskRequestDTO, TaskStatus } from "@/types/task";
 import { taskApi } from "@/services/taskService";
 import { toast } from "sonner";
 import type { UserResponse } from "@/types/user";
 import { useTaskHistoryStore } from "@/store/useTaskHistories";
+import { useViewStore } from "@/store/useViewStore";
 
 export function useTasks() {
+  const { selectedView, setSelectedView } = useViewStore();
+  const { setTaskHistories } = useTaskHistoryStore();
   const {
     tasks,
-    setTasks,
-    moveTaskLocal,
     pageData,
-    setPageData,
-    setCurrentPage,
     currentPage,
     size,
+    selectedStatus,
+    search,
+    setTasks,
+    setSearch,
+    moveTaskLocal,
+    setPageData,
+    setCurrentPage,
+    setStatus,
   } = useTaskStore();
-
-  const { setTaskHistories } = useTaskHistoryStore();
 
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -36,30 +41,33 @@ export function useTasks() {
     }
   }, []);
 
-  const fetchTasksPaged = useCallback(
-    async (status?: TaskStatus, page: number = 0, size: number = 10) => {
-      setLoading(true);
-      setError(null);
+  const fetchTasksPaged = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const response = await taskApi.findByStatusPaged(status, page, size);
+    try {
+      const stausFilter = selectedStatus || null;
+      const response = await taskApi.findByStatusPaged(
+        stausFilter,
+        search,
+        currentPage,
+        size,
+      );
 
-        setTasks(response.content);
-        setPageData(response);
+      setTasks(response.content);
+      setPageData(response);
 
-        return response;
-      } catch (error: any) {
-        setError(
-          error.response?.data?.message || "Erro ao buscar tarefas paginadas.",
-        );
-        setTasks([]);
-        setPageData(null);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [setTasks],
-  );
+      return response;
+    } catch (error: any) {
+      setError(
+        error.response?.data?.message || "Erro ao buscar tarefas paginadas.",
+      );
+      setTasks([]);
+      setPageData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedStatus, search, size, setTasks, currentPage, setPageData]);
 
   // Buscar todas as tarefas
   const fetchTasks = useCallback(async () => {
@@ -85,7 +93,6 @@ export function useTasks() {
     try {
       const data = await taskApi.findAllHistories(taskId);
       setTaskHistories(data);
-      console.log("HISTORIES", data)
       return data;
     } catch (Erro: any) {
       console.error("Erro ao carregar usuários:", error);
@@ -165,19 +172,47 @@ export function useTasks() {
     }
   };
 
+  // 🎯 Dispara Apenas para a Busca Paginada (Workflows) quando os filtros mudarem
+  // useEffect(() => {
+  //   if (selectedView !== "Workflows") return;
+  //   const timer = setTimeout(() => {
+  //     fetchTasksPaged();
+  //   }, 300);
+
+  //   return () => clearTimeout(timer);
+  // }, [search, selectedStatus, currentPage, selectedView, fetchTasksPaged]);
+
+  // 🎯 Escuta a troca de abas e os filtros
+  useEffect(() => {
+    if (selectedView === "Workflows") {
+      const timer = setTimeout(() => {
+        fetchTasksPaged();
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      fetchTasks(); // Carrega todas as tarefas para o Kanban quando ativo
+    }
+  }, [selectedView, search, selectedStatus, currentPage, fetchTasksPaged, fetchTasks]);
+
   return {
     tasks,
     users,
     pageData,
+    selectedStatus,
+    selectedView,
+    search,
     loading,
     error,
     currentPage,
     size,
     setPageData,
     setCurrentPage,
+    setSelectedView,
     fetchTasks,
     fetchTasksPaged,
     fetchUsers,
+    setStatus,
+    setSearch,
     fetchTasksHistories,
     createTask,
     moveTaskStatus,

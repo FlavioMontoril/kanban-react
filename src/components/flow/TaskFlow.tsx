@@ -17,7 +17,7 @@ import { SquareComponent } from "./nodes/Square";
 import { HistorySquareComponents } from "./nodes/HistorySquare";
 
 interface ITaskFlow {
-  data: Task[];
+  data: Task | undefined;
   isDarkMode?: boolean;
 }
 
@@ -43,13 +43,13 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
   useEffect(() => {
     if (!hasHydrated) return;
 
-    if (!selectedTaskId || !data || data.length === 0) {
+    if (!selectedTaskId || !data) {
       setNodes([]);
       setEdges([]);
       return;
     }
 
-    const task = data.find((t) => t.id === selectedTaskId);
+    const task = data;
 
     if (task) {
       const currentNodes = useFlowStore.getState().nodes;
@@ -108,11 +108,6 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
         </div>
       )}
       <ReactFlow
-        // key={
-        //   selectedTaskId ||
-        //   //  "all-nodes"
-        //   "empty-flow"
-        // } // Força re-render para centralizar ao trocar
         nodeTypes={NODE_TYPES}
         nodes={nodes}
         edges={edges}

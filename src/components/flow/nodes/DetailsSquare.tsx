@@ -83,6 +83,12 @@ function DetailsSquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
               <p className="text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-100 dark:border-slate-800 leading-relaxed font-normal">
                 {task?.description || "Nenhuma descrição informada."}
               </p>
+              {/* <span
+                aria-hidden="true"
+                className="inline-block whitespace-nowrap text-xs text-slate-700 dark:text-slate-300 font-normal animate-marquee group-hover:[animation-play-state:paused]"
+              >
+                {task?.description}
+              </span> */}
             </div>
 
             {/* Seção 2: Pessoas Envolvidas */}
@@ -90,7 +96,7 @@ function DetailsSquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                 Pessoas
               </span>
-              
+
               <div className="grid grid-cols-1 gap-1 text-xs">
                 <div className="flex items-center gap-2">
                   <User size={13} className="text-slate-400 shrink-0" />

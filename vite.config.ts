@@ -10,6 +10,10 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
+  define: {
+    // 🎯 Resolve o problema do SockJS procurando o objeto 'global'
+    global: 'window',
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),
