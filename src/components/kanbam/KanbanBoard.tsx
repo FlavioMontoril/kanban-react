@@ -4,6 +4,7 @@ import { KANBAN_COLUMNS, TaskStatus, type Task } from "@/types/task";
 import { toast } from "sonner";
 import { getIcon, getIconColor } from "./utils/border-color";
 import { VirtualizedTaskList } from "./virtualized-task-list";
+import { TaskCardVirtualized } from "./TaskCardVirtualized";
 
 interface IKanbanBoard {
   tasks: Task[];
@@ -127,7 +128,34 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
                       )}
                     </Droppable> */}
                     {/* Virtualização*/}
-                    <Droppable droppableId={col.id}>
+                    {/* <Droppable droppableId={col.id}>
+                      {(provided, snapshot) => (
+                        <VirtualizedTaskList
+                          columnTasks={columnTasks}
+                          provided={provided}
+                          isDraggingOver={snapshot.isDraggingOver}
+                        />
+                      )}
+                    </Droppable> */}
+                    {/* Virtualização com suporte a Clone para Drag & Drop */}
+                    <Droppable
+                      droppableId={col.id}
+                      renderClone={(provided, snapshot, rubric) => {
+                        const taskIndex = rubric.source.index;
+                        const task = columnTasks[taskIndex];
+
+                        if (!task) return null;
+
+                        return (
+                          <TaskCardVirtualized
+                            task={task}
+                            index={taskIndex}
+                            provided={provided}
+                            isDragging={snapshot.isDragging}
+                          />
+                        );
+                      }}
+                    >
                       {(provided, snapshot) => (
                         <VirtualizedTaskList
                           columnTasks={columnTasks}

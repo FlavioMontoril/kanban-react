@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import type { PageResponse, Task, TaskStatus } from "../types/task";
+import type { DateRange } from "react-day-picker";
 
 interface TaskState {
   tasks: Task[];
   pageData: PageResponse<Task> | null;
   selectedStatus: TaskStatus | null;
   search: string;
+  dateRange: DateRange | undefined;
   currentPage: number;
   size: number;
   setTasks: (tasks: Task[]) => void;
@@ -13,6 +15,7 @@ interface TaskState {
   setSearch: (search: string) => void; // 🎯 Nova ação de busca
   setCurrentPage: (page: number) => void; // 👈 Ação para atualizar a página
   setStatus: (selectedStatus: TaskStatus | null) => void;
+  setDateRange: (range: DateRange | undefined) => void; // 👈 Nova ação
   updateTaskLocal: (id: string, updatedTask: Partial<Task>) => void;
   moveTaskLocal: (taskId: string, targetStatus: TaskStatus) => void;
   removeTasksLocal: (taskIds: string[]) => void;
@@ -23,6 +26,7 @@ export const useTaskStore = create<TaskState>((set) => ({
   pageData: null,
   selectedStatus: null,
   search: "",
+  dateRange: undefined,
   currentPage: 0,
   size: 20,
 
@@ -32,6 +36,7 @@ export const useTaskStore = create<TaskState>((set) => ({
   setSearch: (search: string) => set({ search, currentPage: 0 }),
   setCurrentPage: (currentPage) => set({ currentPage }),
   setStatus: (status: TaskStatus | null) => set({ selectedStatus: status }),
+  setDateRange: (range) => set({ dateRange: range }),
   // Atualização otimista/local de campos
   updateTaskLocal: (id, updatedTask) =>
     set((state) => ({

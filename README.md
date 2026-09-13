@@ -1,76 +1,90 @@
-# React + TypeScript + Vite
+# Aplicativo React Kanban
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Uma aplicação de quadro Kanban rica em recursos, construída com React, Vite, TypeScript e Tailwind CSS. O sistema foi projetado para funcionar perfeitamente com um backend (como Spring Boot), e conta com atualizações em tempo real, múltiplos modos de visualização e filtragem avançada de tarefas.
 
-Currently, two official plugins are available:
+## Funcionalidades
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **📋 Quadro Kanban Interativo:** Gerencie tarefas com uma funcionalidade suave de Arrastar e Soltar (Drag & Drop) utilizando `@hello-pangea/dnd`.
+- **🗂️ Múltiplas Visualizações:** Alterne entre as visões de Kanban, Tabela e Fluxos (Workflows) para visualizar suas tarefas e seus históricos da maneira que preferir (usando `@xyflow/react`).
+- **🔄 Atualizações em Tempo Real:** Sincronização instantânea entre diversos clientes usando WebSockets (`@stomp/stompjs` e `sockjs-client`).
+- **🎨 Interface Moderna e Responsiva:** Criada com Tailwind CSS e componentes do Shadcn UI, proporcionando uma experiência visual premium e acessível.
+- **🌓 Modo Claro/Escuro:** Alternância de temas nativa para uma melhor experiência do usuário.
+- **🔍 Filtragem Avançada:** Encontre tarefas de forma rápida através de busca por texto, dropdown de status e seleção de intervalos de datas.
+- **🐻 Gerenciamento de Estado:** Gerenciamento eficiente e escalável no lado do cliente usando o Zustand.
+- **🔔 Notificações:** Sistema de alertas (toast notifications) para ações e atualizações utilizando a biblioteca `sonner`.
 
-## React Compiler
+## Tecnologias Utilizadas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework:** [React 19](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Linguagem:** [TypeScript](https://www.typescriptlang.org/)
+- **Estilização:** [Tailwind CSS](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/)
+- **Gerenciamento de Estado:** [Zustand](https://github.com/pmndrs/zustand)
+- **Drag and Drop:** [@hello-pangea/dnd](https://github.com/hello-pangea/dnd)
+- **Fluxos/Diagramas:** [React Flow (@xyflow/react)](https://reactflow.dev/)
+- **WebSockets:** [STOMP.js](https://stomp-js.github.io/) + SockJS
+- **Cliente HTTP:** [Axios](https://axios-http.com/)
+- **Manipulação de Datas:** [date-fns](https://date-fns.org/)
 
-## Expanding the ESLint configuration
+## Começando
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Pré-requisitos
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Certifique-se de ter o [Node.js](https://nodejs.org/) instalado na sua máquina, juntamente com o [pnpm](https://pnpm.io/) como gerenciador de pacotes.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install -g pnpm
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+### Instalação
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. **Clone o repositório:**
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+   ```bash
+   git clone <url-do-repositorio>
+   cd react-kanbam
+   ```
 
+2. **Instale as dependências:**
+
+   ```bash
+   pnpm install
+   ```
+
+3. **Configuração de Ambiente:**
+
+   Crie um arquivo `.env` na raiz do projeto com base no arquivo `.env.example` fornecido:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Atualize o arquivo `.env` ajustando a variável `VITE_API_BASE_URL` para apontar para o seu backend.
+
+### Rodando a Aplicação
+
+Inicie o servidor de desenvolvimento (que possui Hot Module Replacement - HMR):
+
+```bash
+pnpm run dev
 ```
-# kanban-react
+
+A aplicação estará disponível no seu ambiente local (geralmente em `http://localhost:5173`).
+
+## Suporte ao Docker
+
+Você pode facilmente rodar a aplicação utilizando Docker e Docker Compose. O projeto usa um sistema de *multi-stage build* no `Dockerfile` para gerar o build da aplicação e servi-la através do Nginx (`nginx.conf`).
+
+Inicie o container:
+
+```bash
+docker-compose up -d --build
+```
+
+A aplicação será mapeada para a porta `8082` da sua máquina, estando acessível em `http://localhost:8082`.
+
+## Scripts Disponíveis
+
+- `pnpm run dev`: Inicia o servidor de desenvolvimento do Vite.
+- `pnpm run build`: Compila o TypeScript e gera o build de produção na pasta `dist`.
+- `pnpm run lint`: Roda o ESLint para encontrar problemas de qualidade ou formatação de código.
+- `pnpm run preview`: Roda uma pré-visualização local do build de produção.

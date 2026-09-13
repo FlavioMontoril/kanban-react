@@ -17,7 +17,7 @@ import { Calendar } from "../ui/calendar";
 
 interface IDateTasksWithRangeProps extends React.HTMLAttributes<HTMLDivElement> {
   date: DateRange | undefined;
-  setDate: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
+  setDate: (range: DateRange | undefined) => void;
 }
 
 export function DateTasksWithRange({
