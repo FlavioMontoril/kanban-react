@@ -23,6 +23,8 @@ export const taskApi = {
   findByStatusPaged: async (
     status?: TaskStatus | null,
     search?: string | null,
+    startDate?: string | Date | null,
+    endDate?: string | Date | null,
     page: number = 0,
     size: number = 20,
   ): Promise<PageResponse<Task>> => {
@@ -36,6 +38,19 @@ export const taskApi = {
     }
     if (search && search.trim() !== "") {
       params.append("search", search.trim());
+    }
+    if (startDate) {
+      const formattedStart =
+        startDate instanceof Date
+          ? startDate.toISOString().split("T")[0]
+          : startDate;
+      params.append("startDate", formattedStart);
+    }
+
+    if (endDate) {
+      const formattedEnd =
+        endDate instanceof Date ? endDate.toISOString().split("T")[0] : endDate;
+      params.append("endDate", formattedEnd);
     }
     const response = await api.get<PageResponse<Task>>(
       `/v1/task/paged?${params.toString()}`,

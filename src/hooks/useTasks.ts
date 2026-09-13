@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { UserResponse } from "@/types/user";
 import { useTaskHistoryStore } from "@/store/useTaskHistories";
 import { useViewStore } from "@/store/useViewStore";
+import type { DateRange } from "react-day-picker";
 
 export function useTasks() {
   const { selectedView, setSelectedView } = useViewStore();
@@ -17,17 +18,66 @@ export function useTasks() {
     size,
     selectedStatus,
     search,
+    dateRange,
     setTasks,
-    setSearch,
+    setSearch: setStoreSearch,
+    setDateRange: setStoreDateRange,
     moveTaskLocal,
     setPageData,
     setCurrentPage,
-    setStatus,
+    setStatus: setStoreStatus,
   } = useTaskStore();
 
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  //Estado consolidado que passará pelo debounce (400ms)
+  const [debouncedFilters, setDebouncedFilters] = useState({
+    search,
+    selectedStatus,
+    dateRange,
+    currentPage,
+  });
+
+  //Debounce Global (Reseta o timer a cada mudança em qualquer filtro)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedFilters({
+        search,
+        selectedStatus,
+        dateRange,
+        currentPage,
+      });
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [search, selectedStatus, dateRange, currentPage]);
+
+  // Wrappers para resetar a página ao filtrar
+  const setSearch = useCallback(
+    (newSearch: string) => {
+      setStoreSearch(newSearch);
+      setCurrentPage(0); // Volta para a primeira página ao pesquisar
+    },
+    [setStoreSearch, setCurrentPage],
+  );
+
+  const setStatus = useCallback(
+    (newStatus: TaskStatus | null) => {
+      setStoreStatus(newStatus);
+      setCurrentPage(0); // Volta para a primeira página ao mudar status
+    },
+    [setStoreStatus, setCurrentPage],
+  );
+
+  // Wrapper para resetar a página ao mudar o filtro de data
+  const setDateRange = useCallback(
+    (range: DateRange | undefined) => {
+      setStoreDateRange(range);
+      setCurrentPage(0); // Volta para a primeira página
+    },
+    [setStoreDateRange, setCurrentPage],
+  );
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -46,11 +96,16 @@ export function useTasks() {
     setError(null);
 
     try {
-      const stausFilter = selectedStatus || null;
+      const statusFilter = debouncedFilters.selectedStatus || null;
+      const startDate = debouncedFilters.dateRange?.from ?? null;
+      const endDate = debouncedFilters.dateRange?.to ?? null;
+
       const response = await taskApi.findByStatusPaged(
-        stausFilter,
-        search,
-        currentPage,
+        statusFilter,
+        debouncedFilters.search,
+        startDate,
+        endDate,
+        debouncedFilters.currentPage,
         size,
       );
 
@@ -67,7 +122,7 @@ export function useTasks() {
     } finally {
       setLoading(false);
     }
-  }, [selectedStatus, search, size, setTasks, currentPage, setPageData]);
+  }, [debouncedFilters, size, setTasks, setPageData]);
 
   // Buscar todas as tarefas
   const fetchTasks = useCallback(async () => {
@@ -94,7 +149,7 @@ export function useTasks() {
       const data = await taskApi.findAllHistories(taskId);
       setTaskHistories(data);
       return data;
-    } catch (Erro: any) {
+    } catch (error: any) {
       console.error("Erro ao carregar usuários:", error);
       return [];
     }
@@ -107,7 +162,12 @@ export function useTasks() {
 
     try {
       await taskApi.create(formData);
-      await fetchTasks();
+      // Recarrega a view correta onde o usuário se encontra
+      if (selectedView === "Workflows") {
+        await fetchTasksPaged();
+      } else {
+        await fetchTasks();
+      }
 
       toast.success("Tarefa criada", {
         description: "A tarefa foi criada com sucesso.",
@@ -172,27 +232,22 @@ export function useTasks() {
     }
   };
 
-  // 🎯 Dispara Apenas para a Busca Paginada (Workflows) quando os filtros mudarem
-  // useEffect(() => {
-  //   if (selectedView !== "Workflows") return;
-  //   const timer = setTimeout(() => {
-  //     fetchTasksPaged();
-  //   }, 300);
-
-  //   return () => clearTimeout(timer);
-  // }, [search, selectedStatus, currentPage, selectedView, fetchTasksPaged]);
-
-  // 🎯 Escuta a troca de abas e os filtros
+  // 5. Efeito disparado APENAS quando o objeto debouncedFilters for atualizado
   useEffect(() => {
+    let isCancelled = false;
+
     if (selectedView === "Workflows") {
-      const timer = setTimeout(() => {
+      if (!isCancelled) {
         fetchTasksPaged();
-      }, 300);
-      return () => clearTimeout(timer);
+      }
     } else {
-      fetchTasks(); // Carrega todas as tarefas para o Kanban quando ativo
+      fetchTasks();
     }
-  }, [selectedView, search, selectedStatus, currentPage, fetchTasksPaged, fetchTasks]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedView, debouncedFilters, fetchTasksPaged, fetchTasks]);
 
   return {
     tasks,
@@ -201,11 +256,13 @@ export function useTasks() {
     selectedStatus,
     selectedView,
     search,
+    dateRange,
     loading,
     error,
     currentPage,
     size,
     setPageData,
+    setDateRange,
     setCurrentPage,
     setSelectedView,
     fetchTasks,

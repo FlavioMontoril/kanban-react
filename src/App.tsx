@@ -1,13 +1,12 @@
-import { toast, Toaster } from "sonner";
+import { Toaster } from "sonner";
 import KanbanBoard from "./components/kanbam/KanbanBoard";
 import { TabsViews } from "./components/commons/tasbs-views";
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  // ChevronLeft,
   ChevronRight,
   Eraser,
   Moon,
-  Plus,
+  PackagePlus,
   Search,
   SlidersHorizontal,
   Sun,
@@ -23,20 +22,8 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "./components/ui/resizable";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
-import { useTaskStore } from "./store/useTaskStore";
 import { cn } from "cn";
 import { Button } from "./components/ui/button";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectGroup,
-//   SelectItem,
-//   SelectLabel,
-//   SelectTrigger,
-//   SelectValue,
-// } from "./components/ui/select";
 import type { TaskStatus } from "./types/task";
 import { STATUS_CONFIG } from "./components/kanbam/utils/border-color";
 import {
@@ -49,15 +36,11 @@ import {
   SelectValue,
 } from "./components/ui/select";
 import { DateTasksWithRange } from "./components/commons/DateTasksWithRange";
-import type { DateRange } from "react-day-picker";
 import { endOfDay, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
-
-// type optionsView = "kanban" | "Workflows" | string;
+import { NotificationMenu } from "./components/commons/NotificationMenu";
 
 export default function App() {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isBandejaAberta, setIsBandejaAberta] = useState<boolean>(false);
-  const [searchTasksLocal, setSearchTasksLocal] = useState<string>("");
   // const [selectedView, setSelectedView] = useState<optionsView>(() => {
   //   return localStorage.getItem("view-mode") || "kanban";
   // });
@@ -66,7 +49,6 @@ export default function App() {
     return localStorage.getItem("app-theme") === "dark";
   });
 
-  const { removeTasksLocal } = useTaskStore();
   const { setSelectedTaskId, selectedTaskId } = useFlowStore();
   const { isOpen, mode, task, openModal, closeModal } = useTaskModalStore();
   const {
@@ -74,9 +56,11 @@ export default function App() {
     users,
     selectedStatus,
     selectedView,
-    // search,
+    search,
+    dateRange,
     setStatus,
-    // setSearch,
+    setSearch,
+    setDateRange,
     setCurrentPage,
     setSelectedView,
     fetchUsers,
@@ -84,30 +68,6 @@ export default function App() {
     fetchTasksPaged,
     fetchTasksHistories,
   } = useTasks();
-  useEffect(() => {
-    // Conecta ao endpoint /ws configurado no Spring Boot
-    const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
-      onConnect: () => {
-        // Escuta as notificações de arquivamento
-        client.subscribe("/topic/tasks-archived", (message) => {
-          // 🎯 Log da mensagem completa do STOMP
-          console.log("Mensagem WS recebida:", message);
-          const archivedTaskIds: string[] = JSON.parse(message.body);
-          toast.success(`Tarefa foi arquivada: [ID: ${archivedTaskIds}]`);
-          console.log("IDs das tarefas arquivadas:", archivedTaskIds);
-          removeTasksLocal(archivedTaskIds);
-          // );
-        });
-      },
-    });
-
-    client.activate();
-
-    return () => {
-      client.deactivate();
-    };
-  }, []);
 
   useEffect(() => {
     fetchUsers();
@@ -163,14 +123,14 @@ export default function App() {
 
   const totalFiltrosAtivos = useMemo(() => {
     let count = 0;
-    if (searchTasksLocal?.trim() !== "") count++;
+    if (search?.trim() !== "") count++;
     if (selectedStatus !== null) count++;
     if (dateRange?.from) count++;
     return count;
-  }, [searchTasksLocal, selectedStatus, dateRange]);
+  }, [setSearch, selectedStatus, dateRange]);
 
   const limparFiltros = () => {
-    setSearchTasksLocal("");
+    setSearch("");
     setStatus(null);
     setCurrentPage(0);
     setDateRange(undefined);
@@ -178,7 +138,7 @@ export default function App() {
   const tasks = Array.isArray(dataTasks) ? dataTasks : [];
 
   const filtrados = useMemo(() => {
-    const q = searchTasksLocal.trim().toLowerCase();
+    const q = search.trim().toLowerCase();
     return tasks.filter((a) => {
       if (selectedStatus && a.status !== selectedStatus) return false;
 
@@ -202,7 +162,7 @@ export default function App() {
         .toLowerCase()
         .includes(q);
     });
-  }, [tasks, searchTasksLocal, selectedStatus, dateRange]);
+  }, [tasks, search, selectedStatus, dateRange]);
 
   function onHandleSelectStatus(value: string | null) {
     // Se for "ALL" ou string vazia, define como null para buscar todos os status
@@ -236,6 +196,15 @@ export default function App() {
               )}
             </button>
 
+            <button
+              type="button"
+              onClick={() => openModal("create")}
+              title="Crie uma nova tarefa"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            >
+              <PackagePlus size={18} />
+            </button>
+
             <>
               {/* BANDEJA COM O BOTÃO DENTRO DO MESMO CONTAINER (COM ÍCONES NO MOBILE) */}
               <div className="flex items-center justify-end shrink-0 w-full sm:w-auto min-h-[36px]">
@@ -262,9 +231,9 @@ export default function App() {
                         <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
                         <input
                           type="search"
-                          value={searchTasksLocal || ""}
+                          value={search || ""}
                           onChange={(e) => {
-                            setSearchTasksLocal(e.target.value);
+                            setSearch(e.target.value);
                             setCurrentPage(0);
                           }}
                           placeholder="Buscar..."
@@ -367,13 +336,7 @@ export default function App() {
               </div>
             </>
           </div>
-          <button
-            type="button"
-            onClick={() => openModal("create")}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 text-sm rounded-xl shadow-md transition cursor-pointer"
-          >
-            <Plus size={16} /> Nova Tarefa
-          </button>
+          <NotificationMenu />
         </div>
         <div className="flex-1 min-h-0 overflow-hidden">
           {selectedView === "kanban" && <KanbanBoard tasks={filtrados} />}
