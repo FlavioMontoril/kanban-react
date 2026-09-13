@@ -8,6 +8,14 @@ import { useTaskHistoryStore } from "@/store/useTaskHistories";
 import { useViewStore } from "@/store/useViewStore";
 import type { DateRange } from "react-day-picker";
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === "object" && "response" in error) {
+    const axiosErr = error as { response?: { data?: { message?: string } } };
+    return axiosErr.response?.data?.message || fallback;
+  }
+  return fallback;
+}
+
 export function useTasks() {
   const { selectedView, setSelectedView } = useViewStore();
   const { setTaskHistories } = useTaskHistoryStore();
@@ -84,8 +92,8 @@ export function useTasks() {
       const data = await taskApi.findAllUsers();
       setUsers(data);
       return data;
-    } catch (error: any) {
-      console.error("Erro ao carregar usuários:", error);
+    } catch (err: unknown) {
+      console.error("Erro ao carregar usuários:", err);
       toast.error("Erro ao carregar usuários");
       return [];
     }
@@ -113,10 +121,8 @@ export function useTasks() {
       setPageData(response);
 
       return response;
-    } catch (error: any) {
-      setError(
-        error.response?.data?.message || "Erro ao buscar tarefas paginadas.",
-      );
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Erro ao buscar tarefas paginadas."));
       setTasks([]);
       setPageData(null);
     } finally {
@@ -133,27 +139,30 @@ export function useTasks() {
       const data = await taskApi.findAll();
 
       setTasks(data);
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Erro ao buscar tarefas.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Erro ao buscar tarefas."));
       setTasks([]);
     } finally {
       setLoading(false);
     }
   }, [setTasks]);
 
-  const fetchTasksHistories = useCallback(async (taskId: string) => {
-    setLoading(false);
-    setError(null);
+  const fetchTasksHistories = useCallback(
+    async (taskId: string) => {
+      setLoading(false);
+      setError(null);
 
-    try {
-      const data = await taskApi.findAllHistories(taskId);
-      setTaskHistories(data);
-      return data;
-    } catch (error: any) {
-      console.error("Erro ao carregar usuários:", error);
-      return [];
-    }
-  }, []);
+      try {
+        const data = await taskApi.findAllHistories(taskId);
+        setTaskHistories(data);
+        return data;
+      } catch (err: unknown) {
+        console.error("Erro ao carregar histórico:", err);
+        return [];
+      }
+    },
+    [setTaskHistories],
+  );
 
   // Criar tarefa
   const createTask = async (formData: TaskRequestDTO) => {
@@ -172,12 +181,12 @@ export function useTasks() {
       toast.success("Tarefa criada", {
         description: "A tarefa foi criada com sucesso.",
       });
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Erro ao criar tarefa.");
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, "Erro ao criar tarefa.");
+      setError(msg);
 
       toast.error("Erro ao criar tarefa", {
-        description:
-          error.response?.data?.message || "Não foi possível criar a tarefa.",
+        description: msg,
       });
     } finally {
       setLoading(false);
@@ -214,15 +223,16 @@ export function useTasks() {
       toast.success("Status atualizado", {
         description: `A tarefa foi movida para "${targetStatus}".`,
       });
-    } catch (error: any) {
-      console.error("Falha ao atualizar status:", error);
+    } catch (err: unknown) {
+      console.error("Falha ao atualizar status:", err);
 
       // ↩️ Rollback
       moveTaskLocal(taskId, previousStatus);
 
-      const message =
-        error.response?.data?.message ||
-        "Não foi possível atualizar o status da tarefa.";
+      const message = getErrorMessage(
+        err,
+        "Não foi possível atualizar o status da tarefa.",
+      );
 
       setError(message);
 
@@ -232,17 +242,18 @@ export function useTasks() {
     }
   };
 
-  // 5. Efeito disparado APENAS quando o objeto debouncedFilters for atualizado
+  //Efeito disparado APENAS quando o objeto debouncedFilters for atualizado
   useEffect(() => {
     let isCancelled = false;
 
-    if (selectedView === "Workflows") {
-      if (!isCancelled) {
+    queueMicrotask(() => {
+      if (isCancelled) return;
+      if (selectedView === "Workflows") {
         fetchTasksPaged();
+      } else {
+        fetchTasks();
       }
-    } else {
-      fetchTasks();
-    }
+    });
 
     return () => {
       isCancelled = true;
@@ -275,3 +286,4 @@ export function useTasks() {
     moveTaskStatus,
   };
 }
+

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useRef } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     (state) => state.addNotifications,
   );
   const clientRef = useRef<Client | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
 
   useEffect(() => {
     const client = new Client({
@@ -29,6 +31,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       reconnectDelay: 5000, // Tenta reconectar a cada 5 segundos se a conexão cair
       onConnect: () => {
         console.log("Conectado ao WebSocket via STOMP");
+        setIsConnected(true);
 
         // Escuta o tópico de arquivamento de tarefas
         client.subscribe("/topic/tasks-archived", (message) => {
@@ -47,8 +50,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
           );
         });
       },
+      onDisconnect: () => {
+        setIsConnected(false);
+      },
+      onWebSocketClose: () => {
+        setIsConnected(false);
+      },
       onStompError: (frame) => {
         console.error("Erro no STOMP:", frame.headers["message"]);
+        setIsConnected(false);
       },
     });
 
@@ -57,16 +67,16 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return () => {
       client.deactivate();
+      setIsConnected(false);
     };
   }, [removeTasksLocal, addNotifications]);
 
   return (
-    <WebSocketContext.Provider
-      value={{ isConnected: !!clientRef.current?.connected }}
-    >
+    <WebSocketContext.Provider value={{ isConnected }}>
       {children}
     </WebSocketContext.Provider>
   );
 };
 
 export const useWebSocket = () => useContext(WebSocketContext);
+

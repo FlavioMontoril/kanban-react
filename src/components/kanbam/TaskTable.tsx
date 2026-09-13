@@ -1,4 +1,4 @@
-import { useMemo, type ChangeEvent } from "react";
+import { useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -23,15 +23,9 @@ export function TableTask({ data }: ITaskTable) {
     currentPage,
     size,
     loading,
-    selectedStatus,
     setCurrentPage,
-    setStatus,
   } = useTasks();
   const { selectedTaskId, setSelectedTaskId } = useFlowStore();
-
-  // function onHandleSelectStaus(e: ChangeEvent<HTMLSelectElement>) {
-  //   setStatus(e.target.value as TaskStatus);
-  // }
 
   const stats = useMemo(() => {
     return {
@@ -40,7 +34,7 @@ export function TableTask({ data }: ITaskTable) {
       inProgress: data.filter((t) => t.status === TaskStatus.IN_PROGRESS)
         .length,
     };
-  }, [data]);
+  }, [data, pageData?.totalElements]);
 
   const totalPages = pageData?.totalPage ?? 0;
   const isLastPage = currentPage + 1 === pageData?.totalPage;

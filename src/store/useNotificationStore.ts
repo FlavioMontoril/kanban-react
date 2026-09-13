@@ -14,7 +14,6 @@ export const useNotificationStore = create<NotificationState>()(
     (set) => ({
       notifications: [],
 
-      // Adiciona as novas tarefas recebidas via WebSocket ao topo da lista (evitando duplicados)
       addNotifications: (newTasks) =>
         set((state) => {
           const existingIds = new Set(state.notifications.map((t) => t.id));
@@ -22,18 +21,16 @@ export const useNotificationStore = create<NotificationState>()(
           return { notifications: [...filteredNewTasks, ...state.notifications] };
         }),
 
-      // Remove uma notificação específica ao clicar/marcar como lida
       markAsRead: (taskId) =>
         set((state) => ({
           notifications: state.notifications.filter((t) => t.id !== taskId),
         })),
 
-      // Limpa todas as notificações de uma vez
       clearAll: () => set({ notifications: [] }),
     }),
     {
-      name: 'kanban-notifications-storage', // Chave onde os dados serão salvos no LocalStorage
-      storage: createJSONStorage(() => localStorage), // (Opcional) Define o localStorage explicitamente
+      name: 'kanban-notifications-storage',
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
