@@ -1,27 +1,30 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { Client } from "@stomp/stompjs";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { Client, type StompSubscription } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import { toast } from "sonner";
-import { useTaskStore } from "../store/useTaskStore";
-import { useNotificationStore } from "../store/useNotificationStore";
-import type { Task } from "@/types/task";
 
 interface WebSocketContextType {
   isConnected: boolean;
+  subscribe: (
+    destination: string,
+    callback: (message: any) => void,
+  ) => StompSubscription | null;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
   isConnected: false,
+  subscribe: () => null,
 });
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { removeTasksLocal } = useTaskStore();
-  const addNotifications = useNotificationStore(
-    (state) => state.addNotifications,
-  );
   const clientRef = useRef<Client | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
@@ -32,23 +35,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       onConnect: () => {
         console.log("Conectado ao WebSocket via STOMP");
         setIsConnected(true);
-
-        // Escuta o tópico de arquivamento de tarefas
-        client.subscribe("/topic/tasks-archived", (message) => {
-          const archivedTasks: Task[] = JSON.parse(message.body);
-          const archivedTaskIds = archivedTasks.map((t) => t.id);
-
-          // 1. Atualiza a lista da tela (Kanban/Tabela)
-          removeTasksLocal(archivedTaskIds);
-
-          // 2. Adiciona à store de Notificações (Sino)
-          addNotifications(archivedTasks);
-
-          // 3. Notificação Toast
-          toast.info(
-            `${archivedTasks.length} tarefa(s) foram arquivadas automaticamente.`,
-          );
-        });
       },
       onDisconnect: () => {
         setIsConnected(false);
@@ -69,14 +55,22 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       client.deactivate();
       setIsConnected(false);
     };
-  }, [removeTasksLocal, addNotifications]);
+  }, []);
+
+  // Função genérica para qualquer componente se inscrever em qualquer tópico
+  const subscribe = (destination: string, callback: (message: any) => void) => {
+    if (!clientRef.current || !isConnected) return null;
+
+    return clientRef.current.subscribe(destination, (message) => {
+      callback(JSON.parse(message.body));
+    });
+  };
 
   return (
-    <WebSocketContext.Provider value={{ isConnected }}>
+    <WebSocketContext.Provider value={{ isConnected, subscribe }}>
       {children}
     </WebSocketContext.Provider>
   );
 };
 
 export const useWebSocket = () => useContext(WebSocketContext);
-
