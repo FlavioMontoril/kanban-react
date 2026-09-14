@@ -14,8 +14,10 @@ import {
 } from "./components/ui/resizable";
 import { endOfDay, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
 import { AppHeader } from "./components/AppHeader";
+import { useNotificationSubscriptions } from "./hooks/useNotificationSubscriptions";
 
 export default function App() {
+  useNotificationSubscriptions();
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem("app-theme") === "dark";
   });
@@ -120,7 +122,7 @@ export default function App() {
             <ResizablePanelGroup
               key={selectedTaskId ? "split-mode" : "full-mode"}
               orientation="horizontal"
-              className="min-h-[200px] w-full rounded-lg border"
+              className="min-h-[200px] w-full"
             >
               <ResizablePanel
                 defaultSize={selectedTaskId ? 30 : 100}
@@ -154,4 +156,3 @@ export default function App() {
     </section>
   );
 }
-
