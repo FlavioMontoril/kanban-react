@@ -47,18 +47,8 @@ export function TableTask({ data }: ITaskTable) {
     <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-0 md:p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
       <div className="w-full mx-auto space-y-4 flex flex-col h-full overflow-hidden">
         {/* Cabeçalho Padronizado */}
-        {/* Cabeçalho Padronizado: Coluna em Mobile/Tablet, Linha em Desktops (lg) */}
-        <header className="flex-none flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
+        {/* <header className="flex-none flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
           <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 dark:from-slate-100 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-transparent">
-                Visão em Tabela
-              </h1>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800">
-                {stats.total} itens
-              </span>
-            </div>
-
             <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
               <p>Listagem detalhada de tarefas</p>
               <span className="hidden sm:inline text-slate-300 dark:text-slate-700">
@@ -73,23 +63,8 @@ export function TableTask({ data }: ITaskTable) {
                 {stats.done} concluídas
               </span>
             </div>
-          </div>
-
-          {/* <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
-            <select
-              value={selectedStatus || ""}
-              onChange={(e) => onHandleSelectStaus(e)}
-              className="w-full lg:w-auto text-xs font-semibold px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-            >
-              <option value="">Todos os Status</option>
-              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                <option key={key} value={key}>
-                  {config.label}
-                </option>
-              ))}
-            </select>
           </div> */}
-        </header>
+        {/* </header> */}
 
         {/* Container da Tabela com Scroll Independente */}
         <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">

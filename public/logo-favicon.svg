@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%">
+  <defs>
+    <linearGradient id="kanban-icon-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+  </defs>
+
+  <g id="flow-icon" transform="translate(36, 13)">
+    <!-- Coluna Kanban Esquerda -->
+    <rect x="0" y="40" width="48" height="150" rx="16" fill="url(#kanban-icon-purple)" opacity="0.35" />
+    <!-- Coluna Kanban Centro -->
+    <rect x="64" y="0" width="48" height="230" rx="16" fill="url(#kanban-icon-purple)" opacity="0.75" />
+    <!-- Coluna Kanban Direita -->
+    <rect x="128" y="70" width="48" height="160" rx="16" fill="url(#kanban-icon-purple)" />
+    <!-- Linha de Conexão / Workflow -->
+    <path d="M-10 160 C 40 100, 100 200, 200 110" stroke="#10B981" stroke-width="12" stroke-linecap="round" fill="none" />
+  </g>
+</svg>

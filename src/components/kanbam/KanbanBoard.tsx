@@ -41,23 +41,23 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
   };
 
   // 5. Cálculo das métricas e contadores de tarefas
-  const stats = {
-    total: tasks.length,
-    open: tasks.filter((t) => t.status === TaskStatus.OPEN).length,
-    inProgress: tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length,
-    underReview: tasks.filter((t) => t.status === TaskStatus.UNDER_REVIEW)
-      .length,
-    done: tasks.filter((t) => t.status === TaskStatus.DONE).length,
-    cancelado: tasks.filter((t) => t.status === TaskStatus.CANCELED).length,
-  };
+  // const stats = {
+  //   total: tasks.length,
+  //   open: tasks.filter((t) => t.status === TaskStatus.OPEN).length,
+  //   inProgress: tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length,
+  //   underReview: tasks.filter((t) => t.status === TaskStatus.UNDER_REVIEW)
+  //     .length,
+  //   done: tasks.filter((t) => t.status === TaskStatus.DONE).length,
+  //   cancelado: tasks.filter((t) => t.status === TaskStatus.CANCELED).length,
+  // };
 
   return (
     <>
       {/* Wrapper Fixo: h-screen e overflow-hidden para travar a janela inteira */}
-      <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-0 md:p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
+      <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
         <div className="w-full mx-auto space-y-4 flex flex-col h-full overflow-hidden">
           {/* Cabeçalho (Fixo) */}
-          <header className="flex-none flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
+          {/* <header className="flex-none flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
             <div>
               <h1 className="text-2xl font-extrabold tracking-tight bg-linear-to from-slate-900 via-indigo-950 to-indigo-900 dark:from-slate-100 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-black dark:text-slate-200">
                 Kanban Board
@@ -71,7 +71,7 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
                 </p>
               </div>
             </div>
-          </header>
+          </header> */}
 
           {/* Status de Sincronização */}
           {loading && (
