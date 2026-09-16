@@ -4,7 +4,7 @@ import { Trash2, History, ArrowRight } from "lucide-react";
 import { useFlowStore } from "../store/useFlowStore";
 import type { SquareNodeData } from "./Square";
 import { useTaskHistoryStore } from "@/store/useTaskHistories";
-import { STATUS_CONFIG } from "@/components/kanbam/utils/border-color";
+import { STATUS_CONFIG } from "@/components/kanbam/utils/task-status.config";
 
 function HistorySquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
   const deleteSquareNode = useFlowStore((state) => state.deleteNodeCascade);

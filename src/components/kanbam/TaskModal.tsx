@@ -9,7 +9,7 @@ import { MoveRight, RefreshCw, Plus, Edit, Eye, X } from "lucide-react";
 import { useTasks } from "@/hooks/useTasks";
 import { AssigneeSelect } from "../commons/AssigneeSelect";
 import type { UserResponse } from "@/types/user";
-import { STATUS_CONFIG } from "@/components/kanbam/utils/border-color";
+import { STATUS_CONFIG } from "@/components/kanbam/utils/task-status.config";
 
 interface TaskModalProps {
   isOpen: boolean;

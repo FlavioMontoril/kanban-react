@@ -10,7 +10,7 @@ import {
 import { useFlowStore } from "../store/useFlowStore";
 import { TaskStatus, type Task } from "@/types/task";
 import { memo } from "react";
-import { STATUS_CONFIG } from "@/components/kanbam/utils/border-color";
+import { STATUS_CONFIG } from "@/components/kanbam/utils/task-status.config";
 import { useTaskHistoryStore } from "@/store/useTaskHistories";
 
 export type SquareNodeData = {

@@ -128,9 +128,9 @@ export default function App() {
             >
               <ResizablePanel
                 defaultSize={selectedTaskId ? 30 : 100}
-                minSize={500}
+                minSize={290}
               >
-                <TableTask data={filtrados} />
+                <TableTask data={dataTasks} />
               </ResizablePanel>
               {selectedTaskId && (
                 <>
