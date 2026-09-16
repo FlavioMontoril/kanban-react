@@ -46,26 +46,6 @@ export function TableTask({ data }: ITaskTable) {
   return (
     <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-0 md:p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
       <div className="w-full mx-auto space-y-4 flex flex-col h-full overflow-hidden">
-        {/* Cabeçalho Padronizado */}
-        {/* <header className="flex-none flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
-              <p>Listagem detalhada de tarefas</p>
-              <span className="hidden sm:inline text-slate-300 dark:text-slate-700">
-                •
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                {stats.inProgress} em andamento
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                {stats.done} concluídas
-              </span>
-            </div>
-          </div> */}
-        {/* </header> */}
-
         {/* Container da Tabela com Scroll Independente */}
         <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -161,13 +141,6 @@ export function TableTask({ data }: ITaskTable) {
             </Table>
           </div>
 
-          {/* Rodapé Informativo da Tabela */}
-          {/* <footer className="flex-none px-5 py-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-xs text-slate-400 font-medium">
-            <span>Exibindo {data.length} registros</span>
-            <span>Atualizado recentemente</span>
-          </footer> */}
-
-          {/* Rodapé com Navegação Ajustada */}
           <footer className="flex-none px-5 py-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-xs text-slate-500 font-medium">
             <div className="flex items-center gap-4">
               <span>
