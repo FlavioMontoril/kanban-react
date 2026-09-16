@@ -21,7 +21,7 @@ import { DateTasksWithRange } from "./commons/DateTasksWithRange";
 import { Button } from "./ui/button";
 import { NotificationMenu } from "./commons/NotificationMenu";
 import { TaskStatus } from "@/types/task";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTaskModalStore } from "@/store/useTaskModalStore";
 import { useTasks } from "@/hooks/useTasks";
 
@@ -46,6 +46,15 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
   } = useTasks();
 
   const [isBandejaAberta, setIsBandejaAberta] = useState<boolean>(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null); // <--- Referência de Scroll
+
+  // Redireciona o scroll vertical da roda do mouse para scroll horizontal
+  const handleWheelScroll = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!scrollContainerRef.current) return;
+    if (e.deltaY !== 0) {
+      scrollContainerRef.current.scrollLeft += e.deltaY;
+    }
+  };
 
   function onHandleSelectStatus(value: string | null) {
     const newStatus =
@@ -105,8 +114,11 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
                 className="h-10 sm:h-12 w-auto object-contain"
               />
               {/* No mobile, flex-nowrap + overflow-x-auto permite deslizar os ícones/inputs sem quebrar a tela */}
-              {/* <div className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto no-scrollbar"> */}
-              <div className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto no-scrollbar [mask-image:linear-gradient(to_right,black_80%,transparent_100%)] sm:[mask-image:none]">
+              <div
+                ref={scrollContainerRef}
+                onWheel={handleWheelScroll}
+                className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto custom-scrollbar-horizontal scroll-smooth"
+              >
                 <TabsViews value={selectedView} onSelect={setSelectedView} />
 
                 <button
