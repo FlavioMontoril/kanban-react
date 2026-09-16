@@ -16,8 +16,8 @@ export function EstatisticasTasks({ tasks }: IEstatisticasTasks) {
   };
 
   return (
-    <section className="flex justify-center items-center px-4">
-      <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300 px-4 py-2">
+    <section className="flex justify-center items-center">
+      <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300 px-3">
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-slate-500 ring-2 ring-slate-500/20" />
           <span>{stats.total} total</span>

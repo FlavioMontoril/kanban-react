@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTaskStore } from "@/store/useTaskStore";
 import type { TaskRequestDTO, TaskStatus } from "@/types/task";
 import { taskApi } from "@/services/taskService";
@@ -44,19 +44,30 @@ export function useTasks() {
     search,
     selectedStatus,
     dateRange,
-    currentPage,
   });
+
+  const toastIdRef = useRef<string | number>("search-toast-id");
 
   //Debounce Global (Reseta o timer a cada mudança em qualquer filtro)
   useEffect(() => {
+    const hasActiveFilters = Boolean(search || selectedStatus || dateRange);
+    // Feedback imediato ao usuário enquanto ele digita
+    if (hasActiveFilters) {
+      // Usar 'id' fixo impede que o Sonner crie múltiplos cards empilhados
+      toast.loading("Aguardando pausa para buscar...", {
+        position: "bottom-center",
+        id: toastIdRef.current,
+        description: "A pesquisa iniciará em instantes.",
+      });
+    }
+
     const timer = setTimeout(() => {
       setDebouncedFilters({
         search,
         selectedStatus,
         dateRange,
-        currentPage,
       });
-    }, 400);
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, [search, selectedStatus, dateRange, currentPage]);
@@ -112,7 +123,7 @@ export function useTasks() {
         debouncedFilters.search,
         startDate,
         endDate,
-        debouncedFilters.currentPage,
+        currentPage,
         size,
       );
 
@@ -127,7 +138,7 @@ export function useTasks() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedFilters, size, setTasks, setPageData]);
+  }, [debouncedFilters, size, currentPage, setTasks, setPageData]);
 
   // Buscar todas as tarefas
   const fetchTasks = useCallback(async () => {
@@ -225,7 +236,7 @@ export function useTasks() {
     } catch (err: unknown) {
       console.error("Falha ao atualizar status:", err);
 
-      // ↩️ Rollback
+      // Rollback
       moveTaskLocal(taskId, previousStatus);
 
       const message = getErrorMessage(
@@ -242,15 +253,49 @@ export function useTasks() {
   };
 
   //Efeito disparado APENAS quando o objeto debouncedFilters for atualizado
+  // useEffect(() => {
+  //   let isCancelled = false;
+
+  //   queueMicrotask(() => {
+  //     if (isCancelled) return;
+  //     if (selectedView === "Workflows") {
+  //       fetchTasksPaged();
+  //     } else {
+  //       fetchTasks();
+  //     }
+  //   });
+
+  //   return () => {
+  //     isCancelled = true;
+  //   };
+  // }, [selectedView, debouncedFilters, fetchTasksPaged, fetchTasks]);
+
   useEffect(() => {
     let isCancelled = false;
 
-    queueMicrotask(() => {
-      if (isCancelled) return;
+    const runFetch = async () => {
+      // Atualiza para 'Buscando...' no mesmo card visual
+      toast.loading("Buscando tarefas no servidor...", {
+        position: "bottom-center",
+        id: toastIdRef.current,
+        description: "Carregando resultados...",
+      });
+
       if (selectedView === "Workflows") {
-        fetchTasksPaged();
+        await fetchTasksPaged();
       } else {
-        fetchTasks();
+        await fetchTasks();
+      }
+
+      // Se não foi cancelado por uma nova mudança, finaliza/dismiss no toast
+      if (!isCancelled) {
+        toast.dismiss(toastIdRef.current);
+      }
+    };
+
+    queueMicrotask(() => {
+      if (!isCancelled) {
+        runFetch();
       }
     });
 
@@ -285,4 +330,3 @@ export function useTasks() {
     moveTaskStatus,
   };
 }
-

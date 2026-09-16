@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { TaskStatus, type Task } from "@/types/task";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
-import { STATUS_CONFIG } from "./utils/border-color";
+import { STATUS_CONFIG } from "./utils/task-status.config";
 import { useTasks } from "@/hooks/useTasks";
 import { useFlowStore } from "../flow/store/useFlowStore";
 
@@ -58,10 +58,10 @@ export function TableTask({ data }: ITaskTable) {
                   <TableHead className="w-[160px] font-bold text-slate-700 dark:text-slate-200">
                     Status
                   </TableHead>
-                  <TableHead className="font-bold text-slate-700 dark:text-slate-200">
+                  <TableHead className="w-[200px] font-bold text-slate-700 dark:text-slate-200">
                     Título
                   </TableHead>
-                  <TableHead className="w-[200px] font-bold text-slate-700 dark:text-slate-200">
+                  <TableHead className="font-bold text-slate-700 dark:text-slate-200">
                     Relator
                   </TableHead>
                   <TableHead className="w-[60px] text-right font-bold text-slate-700 dark:text-slate-200">

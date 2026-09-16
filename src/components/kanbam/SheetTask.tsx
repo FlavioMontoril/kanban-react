@@ -13,7 +13,7 @@ import { TaskStatus, type Task } from "@/types/task";
 import { ListFilter, User, Plus } from "lucide-react";
 import { useFlowStore } from "../flow/store/useFlowStore";
 import { useTaskModalStore } from "@/store/useTaskModalStore";
-import { STATUS_CONFIG } from "./utils/border-color";
+import { STATUS_CONFIG } from "./utils/task-status.config";
 
 interface ITaskSheet {
   data: Task[];

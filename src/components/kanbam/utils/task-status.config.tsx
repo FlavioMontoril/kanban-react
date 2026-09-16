@@ -1,5 +1,5 @@
 import { CheckCircle2, Circle, Clock, Eye, XCircle } from "lucide-react";
-import { TaskStatus } from "../../../types/task";
+import { TaskStatus, type Task } from "../../../types/task";
 
 // Helper para obter a cor da borda lateral do card baseada no status
 export const getStatusBorderColor = (status: TaskStatus) => {
@@ -49,6 +49,22 @@ export const getIcon = (status: TaskStatus) => {
   }
 };
 
+export const getTaskStats = (tasks: Task[] = []) => {
+  return {
+    Todos: tasks.length,
+    [TaskStatus.OPEN]: tasks.filter((t) => t.status === TaskStatus.OPEN).length,
+    [TaskStatus.IN_PROGRESS]: tasks.filter(
+      (t) => t.status === TaskStatus.IN_PROGRESS,
+    ).length,
+    [TaskStatus.UNDER_REVIEW]: tasks.filter(
+      (t) => t.status === TaskStatus.UNDER_REVIEW,
+    ).length,
+    [TaskStatus.DONE]: tasks.filter((t) => t.status === TaskStatus.DONE).length,
+    [TaskStatus.CANCELED]: tasks.filter((t) => t.status === TaskStatus.CANCELED)
+      .length,
+  };
+};
+
 export const STATUS_CONFIG: Record<
   TaskStatus,
   { label: string; bg: string; text: string; icon: React.ReactNode }
@@ -84,4 +100,3 @@ export const STATUS_CONFIG: Record<
     icon: <XCircle size={12} className="stroke-[2.5]" />,
   },
 };
-

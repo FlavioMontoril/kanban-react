@@ -2,7 +2,7 @@ import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { useTasks } from "@/hooks/useTasks";
 import { KANBAN_COLUMNS, TaskStatus, type Task } from "@/types/task";
 import { toast } from "sonner";
-import { getIcon, getIconColor } from "./utils/border-color";
+import { getIcon, getIconColor } from "./utils/task-status.config";
 import { VirtualizedTaskList } from "./virtualized-task-list";
 import { TaskCardVirtualized } from "./TaskCardVirtualized";
 import { Skeleton } from "../ui/skeleton";
