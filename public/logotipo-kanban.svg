@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 320" width="100%" height="100%">
+  <defs>
+    <linearGradient id="opt2-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+  </defs>
+
+  <!-- GRUPO DO ÍCONE -->
+  <g id="flow-icon" transform="translate(40, 40)">
+    <!-- Coluna Kanban Esquerda -->
+    <rect x="0" y="40" width="48" height="150" rx="16" fill="url(#opt2-purple)" opacity="0.35" />
+    <!-- Coluna Kanban Centro -->
+    <rect x="64" y="0" width="48" height="230" rx="16" fill="url(#opt2-purple)" opacity="0.75" />
+    <!-- Coluna Kanban Direita -->
+    <rect x="128" y="70" width="48" height="160" rx="16" fill="url(#opt2-purple)" />
+    <!-- Linha de Conexão / Workflow -->
+    <path d="M-10 160 C 40 100, 100 200, 200 110" stroke="#10B981" stroke-width="12" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- GRUPO DO TEXTO -->
+  <g id="text-opt2" transform="translate(290, 150)">
+    <text font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="76" fill="#6366F1" letter-spacing="-2">
+      Kan<tspan fill="#818CF8">bam</tspan>
+    </text>
+    <text y="42" x="4" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="22" fill="#94A3B8" letter-spacing="4">
+      SMART KANBAN &amp; VIEWS
+    </text>
+  </g>
+</svg>

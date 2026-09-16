@@ -113,7 +113,7 @@ export default function App() {
 
   return (
     <section className={isDarkMode ? "dark" : ""}>
-      <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col ">
+      <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col gap-3">
         <Toaster position="top-center" richColors />
         <AppHeader isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
         <main className="flex-1 min-h-0 overflow-hidden">
