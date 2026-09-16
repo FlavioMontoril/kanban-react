@@ -94,7 +94,6 @@ export function useTasks() {
       return data;
     } catch (err: unknown) {
       console.error("Erro ao carregar usuários:", err);
-      toast.error("Erro ao carregar usuários");
       return [];
     }
   }, []);

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { getIcon, getIconColor } from "./utils/border-color";
 import { VirtualizedTaskList } from "./virtualized-task-list";
 import { TaskCardVirtualized } from "./TaskCardVirtualized";
+import { Skeleton } from "../ui/skeleton";
 
 interface IKanbanBoard {
   tasks: Task[];
@@ -40,39 +41,11 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
     await moveTaskStatus(draggableId, targetStatus);
   };
 
-  // 5. Cálculo das métricas e contadores de tarefas
-  // const stats = {
-  //   total: tasks.length,
-  //   open: tasks.filter((t) => t.status === TaskStatus.OPEN).length,
-  //   inProgress: tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length,
-  //   underReview: tasks.filter((t) => t.status === TaskStatus.UNDER_REVIEW)
-  //     .length,
-  //   done: tasks.filter((t) => t.status === TaskStatus.DONE).length,
-  //   cancelado: tasks.filter((t) => t.status === TaskStatus.CANCELED).length,
-  // };
-
   return (
     <>
       {/* Wrapper Fixo: h-screen e overflow-hidden para travar a janela inteira */}
       <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
         <div className="w-full mx-auto space-y-4 flex flex-col h-full overflow-hidden">
-          {/* Cabeçalho (Fixo) */}
-          {/* <header className="flex-none flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
-            <div>
-              <h1 className="text-2xl font-extrabold tracking-tight bg-linear-to from-slate-900 via-indigo-950 to-indigo-900 dark:from-slate-100 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-black dark:text-slate-200">
-                Kanban Board
-              </h1>
-              <div className="flex items-center">
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                  {`Gerenciador de Tarefas Inteligente -`}
-                </p>
-                <p className="text-md text-violet-800 dark:text-slate-400 mt-0.5 font-bold">
-                  {` Total de: ${stats.total}`}
-                </p>
-              </div>
-            </div>
-          </header> */}
-
           {/* Status de Sincronização */}
           {loading && (
             <div className="flex-none text-center text-xs font-semibold text-indigo-600 dark:text-indigo-400 animate-pulse">
@@ -137,33 +110,57 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
                         />
                       )}
                     </Droppable> */}
-                    {/* Virtualização com suporte a Clone para Drag & Drop */}
-                    <Droppable
-                      droppableId={col.id}
-                      renderClone={(provided, snapshot, rubric) => {
-                        const taskIndex = rubric.source.index;
-                        const task = columnTasks[taskIndex];
+                    {!tasks || tasks.length === 0 || loading ? (
+                      <div className="flex-1 space-y-2.5 overflow-hidden mt-1 [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]">
+                        {Array.from({ length: 7 }).map((_, index) => (
+                          <div
+                            key={index}
+                            className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 space-y-3 shadow-xs shrink-0"
+                          >
+                            <div className="flex items-center justify-between">
+                              <Skeleton className="h-3 w-16" />
+                              <Skeleton className="h-3 w-3 rounded-full" />
+                            </div>
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                            <div className="flex items-center justify-between pt-1">
+                              <Skeleton className="h-5 w-16 rounded-md" />
+                              <Skeleton className="h-6 w-6 rounded-full" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        {/* Virtualização com suporte a Clone para Drag & Drop */}
+                        <Droppable
+                          droppableId={col.id}
+                          renderClone={(provided, snapshot, rubric) => {
+                            const taskIndex = rubric.source.index;
+                            const task = columnTasks[taskIndex];
 
-                        if (!task) return null;
+                            if (!task) return null;
 
-                        return (
-                          <TaskCardVirtualized
-                            task={task}
-                            index={taskIndex}
-                            provided={provided}
-                            isDragging={snapshot.isDragging}
-                          />
-                        );
-                      }}
-                    >
-                      {(provided, snapshot) => (
-                        <VirtualizedTaskList
-                          columnTasks={columnTasks}
-                          provided={provided}
-                          isDraggingOver={snapshot.isDraggingOver}
-                        />
-                      )}
-                    </Droppable>
+                            return (
+                              <TaskCardVirtualized
+                                task={task}
+                                index={taskIndex}
+                                provided={provided}
+                                isDragging={snapshot.isDragging}
+                              />
+                            );
+                          }}
+                        >
+                          {(provided, snapshot) => (
+                            <VirtualizedTaskList
+                              columnTasks={columnTasks}
+                              provided={provided}
+                              isDraggingOver={snapshot.isDraggingOver}
+                            />
+                          )}
+                        </Droppable>
+                      </>
+                    )}
                   </div>
                 );
               })}

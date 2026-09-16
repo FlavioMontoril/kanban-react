@@ -148,8 +148,8 @@ export function NotificationMenu() {
                     <p className="text-xs font-medium">Nenhuma notificação por aqui.</p>
                   </div>
                 ) : (
-                  notifications.map((item) => {
-                    const details = eventDetails[item.type];
+                  notifications?.map((item) => {
+                    const details = eventDetails[item?.type];
                     return (
                       <div
                         key={item.id}

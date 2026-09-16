@@ -15,6 +15,7 @@ import {
 import { endOfDay, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
 import { AppHeader } from "./components/AppHeader";
 import { useNotificationSubscriptions } from "./hooks/useNotificationSubscriptions";
+import { EstatisticasTasks } from "./components/commons/EstatisticasTasks";
 
 export default function App() {
   useNotificationSubscriptions();
@@ -116,6 +117,7 @@ export default function App() {
       <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col gap-3">
         <Toaster position="top-center" richColors />
         <AppHeader isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+        <EstatisticasTasks tasks={tasks} />
         <main className="flex-1 min-h-0 overflow-hidden">
           {selectedView === "kanban" && <KanbanBoard tasks={filtrados} />}
           {selectedView === "Workflows" && (
@@ -145,7 +147,6 @@ export default function App() {
         </main>
       </div>
 
-      {/* Modal para Criação/Edição/Visualização */}
       <TaskModal
         isOpen={isOpen}
         mode={mode}
