@@ -12,18 +12,16 @@ import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { STATUS_CONFIG } from "./kanbam/utils/border-color";
+import { getTaskStats, STATUS_CONFIG } from "./kanbam/utils/border-color";
 import { DateTasksWithRange } from "./commons/DateTasksWithRange";
 import { Button } from "./ui/button";
 import { NotificationMenu } from "./commons/NotificationMenu";
-import type { TaskStatus } from "@/types/task";
-import { useMemo, useState } from "react";
+import { TaskStatus } from "@/types/task";
+import { useMemo, useRef, useState } from "react";
 import { useTaskModalStore } from "@/store/useTaskModalStore";
 import { useTasks } from "@/hooks/useTasks";
 
@@ -39,6 +37,7 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
     selectedView,
     search,
     dateRange,
+    tasks,
     setStatus,
     setSearch,
     setDateRange,
@@ -47,6 +46,15 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
   } = useTasks();
 
   const [isBandejaAberta, setIsBandejaAberta] = useState<boolean>(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null); // <--- Referência de Scroll
+
+  // Redireciona o scroll vertical da roda do mouse para scroll horizontal
+  const handleWheelScroll = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!scrollContainerRef.current) return;
+    if (e.deltaY !== 0) {
+      scrollContainerRef.current.scrollLeft += e.deltaY;
+    }
+  };
 
   function onHandleSelectStatus(value: string | null) {
     const newStatus =
@@ -69,6 +77,8 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
     setCurrentPage(0);
     setDateRange(undefined);
   };
+
+  const taskStats = useMemo(() => getTaskStats(tasks), [tasks]);
 
   return (
     <header className="relative w-full p-3 sm:p-5">
@@ -104,8 +114,11 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
                 className="h-10 sm:h-12 w-auto object-contain"
               />
               {/* No mobile, flex-nowrap + overflow-x-auto permite deslizar os ícones/inputs sem quebrar a tela */}
-              {/* <div className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto no-scrollbar"> */}
-              <div className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto no-scrollbar [mask-image:linear-gradient(to_right,black_80%,transparent_100%)] sm:[mask-image:none]">
+              <div
+                ref={scrollContainerRef}
+                onWheel={handleWheelScroll}
+                className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto custom-scrollbar-horizontal scroll-smooth"
+              >
                 <TabsViews value={selectedView} onSelect={setSelectedView} />
 
                 <button
@@ -150,41 +163,61 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
                 </div>
 
                 {/* 2. Select Status */}
-                <div className="flex items-center gap-3 shrink-0">
-                  <Select
-                    value={selectedStatus || "Todos os Status"}
-                    onValueChange={onHandleSelectStatus}
-                  >
-                    <SelectTrigger className="w-28 sm:w-36 h-8 sm:h-8.5 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs shadow-xs cursor-pointer">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
+                <Select
+                  value={selectedStatus || "Todos"}
+                  onValueChange={onHandleSelectStatus}
+                >
+                  <SelectTrigger className="w-auto gap-2">
+                    <SelectValue placeholder="Selecione um status">
+                      {selectedStatus && (
+                        <div className="flex items-center gap-2">
+                          {/* Ícone + Label */}
+                          <span className="flex items-center gap-1.5 font-medium text-xs">
+                            {STATUS_CONFIG[selectedStatus as TaskStatus].label}
+                          </span>
 
-                    <SelectContent className="rounded-xl mt-12.5">
-                      <SelectGroup>
-                        <SelectLabel className="text-[11px] text-muted-foreground">
-                          Filtro de Status
-                        </SelectLabel>
+                          {/* Badge com Contador do Status Selecionado */}
+                          <span
+                            className={`${
+                              STATUS_CONFIG[selectedStatus as TaskStatus].badge
+                            } text-[10px] font-bold px-1.5 py-0.5 rounded-full`}
+                          >
+                            {taskStats[
+                              selectedStatus as keyof typeof taskStats
+                            ] ?? 0}
+                          </span>
+                        </div>
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
 
+                  {/* Itens do Menu Dropdown */}
+                  <SelectContent>
+                    {Object.entries(STATUS_CONFIG).map(([key, config]) => {
+                      const count =
+                        taskStats[key as keyof typeof taskStats] ?? 0;
+
+                      return (
                         <SelectItem
                           className="cursor-pointer text-xs font-medium rounded-lg"
-                          value="Todos os Status"
+                          key={key}
+                          value={key}
                         >
-                          Todos os Status
+                          <div className="flex items-center justify-between w-full gap-3">
+                            <span className="flex items-center gap-1.5">
+                              {config.label}
+                            </span>
+                            <span
+                              className={`${config.badge} text-[10px] font-bold px-1.5 py-0.5 rounded-full`}
+                            >
+                              {count}
+                            </span>
+                          </div>
                         </SelectItem>
-
-                        {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                          <SelectItem
-                            className="cursor-pointer text-xs font-medium rounded-lg"
-                            key={key}
-                            value={key}
-                          >
-                            {config.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
 
                 {/* 3. DatePicker */}
                 <div className="shrink-0">
