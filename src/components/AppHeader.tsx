@@ -103,16 +103,10 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
               className={cn(
                 "flex items-center transition-all duration-[1500ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
                 isBandejaAberta
-                  ? "max-w-[calc(90vw-110px)] sm:max-w-[1250px] opacity-100 pr-1 sm:pr-2 pointer-events-auto"
+                  ? "max-w-[calc(90vw-190px)] sm:max-w-[1250px] opacity-100 pr-1 sm:pr-2 pointer-events-auto"
                   : "max-w-0 opacity-0 pr-0 pointer-events-none",
               )}
             >
-              <img
-                src="/logotipo-kanban.svg"
-                alt="Logo Kanbam"
-                className="h-10 sm:h-12 w-auto object-contain"
-              />
-              {/* No mobile, flex-nowrap + overflow-x-auto permite deslizar os ícones/inputs sem quebrar a tela */}
               <div
                 ref={scrollContainerRef}
                 onWheel={handleWheelScroll}
@@ -218,21 +212,27 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
               </div>
             </div>
 
+            <img
+              src="/logotipo-kanban.svg"
+              alt="Logo Kanbam"
+              className="h-10 sm:h-12 w-auto object-contain"
+            />
+
             {/* BOTÃO FIXO DA BANDEJA */}
             <Button
               variant="ghost"
               onClick={() => setIsBandejaAberta((prev) => !prev)}
               title="Filtros"
               className={cn(
-                "h-8 sm:h-8.5 px-2.5 sm:px-3.5 gap-1.5 sm:gap-2 rounded-xl text-xs font-bold cursor-pointer shrink-0 transition-all duration-300 active:scale-95 ml-auto whitespace-nowrap",
+                "h-8 sm:h-8.5 px-2.5 sm:px-3.5 gap-1.5 sm:gap-2 rounded-xl text-xs font-bold cursor-pointer shrink-0 transition-all duration-300 active:scale-95 hover:scale-110 ml-auto whitespace-nowrap",
                 isBandejaAberta
-                  ? "bg-slate-900 text-slate-100 dark:bg-slate-800 dark:text-slate-100"
-                  : "hover:bg-transparent dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300",
+                  ? "bg-slate-900 text-violet-400 hover:text-violet-900 dark:bg-slate-800 dark:text-violet-400 dark:hover:text-violet-400"
+                  : "hover:bg-transparent dark:hover:bg-slate-800/60 text-slate-700 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-400",
               )}
             >
               <LayoutGridIcon
                 className={cn(
-                  "size-4.5 opacity-60 transition-transform",
+                  "size-4.5 opacity-60 transition-transform ",
                   isBandejaAberta
                     ? "rotate-[360deg] duration-[2000ms]"
                     : "rotate-0 duration-[2000ms]",
