@@ -1,6 +1,7 @@
 import type {
   PageResponse,
   Task,
+  TaskMetrics,
   TaskRequestDTO,
   TaskStatus,
   UpdateTaskStatusDTO,
@@ -61,6 +62,11 @@ export const taskApi = {
   // Criar uma nova tarefa
   create: async (data: TaskRequestDTO): Promise<void> => {
     await api.post("/v1/task/create", data);
+  },
+
+  findMetrics: async (): Promise<TaskMetrics[]> => {
+    const response = await api.get<TaskMetrics[]>("/v1/task/metrics");
+    return response.data;
   },
 
   // Atualizar/Mover o status da tarefa

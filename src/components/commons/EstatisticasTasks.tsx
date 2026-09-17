@@ -1,19 +1,24 @@
-import { TaskStatus, type Task } from "@/types/task";
-// import { Progress, ProgressLabel, ProgressValue } from "../ui/progress";
+import { TaskStatus, type PageResponse, type Task } from "@/types/task";
 
 interface IEstatisticasTasks {
-  tasks: Task[];
+  tasks: Task[] | PageResponse<Task> | null;
 }
 
 export function EstatisticasTasks({ tasks }: IEstatisticasTasks) {
+  const taskList = Array.isArray(tasks) ? tasks : (tasks?.content ?? []);
+  const total = Array.isArray(tasks)
+    ? tasks.length
+    : (tasks?.totalElements ?? 0);
+    
   const stats = {
-    total: tasks.length,
-    open: tasks.filter((t) => t.status === TaskStatus.OPEN).length,
-    inProgress: tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length,
-    underReview: tasks.filter((t) => t.status === TaskStatus.UNDER_REVIEW)
+    total,
+    open: taskList.filter((t) => t.status === TaskStatus.OPEN).length,
+    inProgress: taskList.filter((t) => t.status === TaskStatus.IN_PROGRESS)
       .length,
-    done: tasks.filter((t) => t.status === TaskStatus.DONE).length,
-    cancelado: tasks.filter((t) => t.status === TaskStatus.CANCELED).length,
+    underReview: taskList.filter((t) => t.status === TaskStatus.UNDER_REVIEW)
+      .length,
+    done: taskList.filter((t) => t.status === TaskStatus.DONE).length,
+    cancelado: taskList.filter((t) => t.status === TaskStatus.CANCELED).length,
   };
 
   const tarefasValidas = stats.total - stats.cancelado;
@@ -101,9 +106,9 @@ export function EstatisticasTasks({ tasks }: IEstatisticasTasks) {
               {progressPercentage}%
             </span>
             <div className="flex flex-col text-[10px] text-slate-500 font-medium leading-none">
-              <span className="text-center">{stats.done}</span>
+              {stats.done > 1 && <span className="text-center">{stats.done}</span>}
               <span className="text-[10px] text-slate-500 font-medium">
-                {`Concluído${stats.done > 1 && "s"}`}
+                {`Concluído${stats.done > 1 ? "s" : ""}`}
               </span>
             </div>
           </div>
