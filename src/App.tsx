@@ -17,11 +17,16 @@ import { AppHeader } from "./components/AppHeader";
 import { useNotificationSubscriptions } from "./hooks/useNotificationSubscriptions";
 import { EstatisticasTasks } from "./components/commons/EstatisticasTasks";
 import { TaskMetrics } from "./components/TaskMetrics";
+import { AnimatePresence } from "framer-motion";
+import { SplashScreen } from "./components/commons/SplashScreen";
 
 export default function App() {
   useNotificationSubscriptions();
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem("app-theme") === "dark";
+  });
+  const [showSplash, setShowSplash] = useState<boolean>(() => {
+    return !sessionStorage.getItem("has-seen-splash");
   });
 
   const toggleTheme = () => {
@@ -82,6 +87,12 @@ export default function App() {
     }
   }, [isDarkMode]);
 
+  const handleFinishSplash = () => {
+    // Marca na sessão que a splash já foi vista antes de escondê-la
+    sessionStorage.setItem("has-seen-splash", "true");
+    setShowSplash(false);
+  };
+
   const tasks = useMemo(
     () => (Array.isArray(dataTasks) ? dataTasks : []),
     [dataTasks],
@@ -117,48 +128,60 @@ export default function App() {
   const taskPerView = selectedView === "kanban" ? tasks : pageData;
 
   return (
-    <section className={isDarkMode ? "dark" : ""}>
-      <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col gap-3">
-        <Toaster position="top-center" richColors />
-        <AppHeader isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
-        { selectedView !== "metrics" && <EstatisticasTasks tasks={taskPerView!} />}
-        <main className="flex-1 min-h-0 overflow-hidden">
-          {selectedView === "kanban" && <KanbanBoard tasks={filtrados} />}
-          {selectedView === "Workflows" && (
-            <ResizablePanelGroup
-              key={selectedTaskId ? "split-mode" : "full-mode"}
-              orientation="horizontal"
-              className="min-h-[200px] w-full"
-            >
-              <ResizablePanel
-                defaultSize={selectedTaskId ? 30 : 100}
-                minSize={290}
-              >
-                <TableTask data={dataTasks} />
-              </ResizablePanel>
-              {selectedTaskId && (
-                <>
-                  <ResizableHandle withHandle />
-                  <ResizablePanel defaultSize="70%">
-                    <TaskFlow
-                      data={tasks.find((t) => t.id === selectedTaskId)}
-                    />
-                  </ResizablePanel>
-                </>
-              )}
-            </ResizablePanelGroup>
+    <>
+      <AnimatePresence mode="wait">
+        {showSplash && (
+          <SplashScreen
+            key="splash-screen"
+            onFinish={handleFinishSplash}
+          />
+        )}
+      </AnimatePresence>
+      <section className={isDarkMode ? "dark" : ""}>
+        <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col gap-3">
+          <Toaster position="top-center" richColors />
+          <AppHeader isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+          {selectedView !== "metrics" && (
+            <EstatisticasTasks tasks={taskPerView!} />
           )}
-          {selectedView === "metrics" && <TaskMetrics/>}
-        </main>
-      </div>
+          <main className="flex-1 min-h-0 overflow-hidden">
+            {selectedView === "kanban" && <KanbanBoard tasks={filtrados} />}
+            {selectedView === "Workflows" && (
+              <ResizablePanelGroup
+                key={selectedTaskId ? "split-mode" : "full-mode"}
+                orientation="horizontal"
+                className="min-h-[200px] w-full"
+              >
+                <ResizablePanel
+                  defaultSize={selectedTaskId ? 30 : 100}
+                  minSize={290}
+                >
+                  <TableTask data={dataTasks} />
+                </ResizablePanel>
+                {selectedTaskId && (
+                  <>
+                    <ResizableHandle withHandle />
+                    <ResizablePanel defaultSize="70%">
+                      <TaskFlow
+                        data={tasks.find((t) => t.id === selectedTaskId)}
+                      />
+                    </ResizablePanel>
+                  </>
+                )}
+              </ResizablePanelGroup>
+            )}
+            {selectedView === "metrics" && <TaskMetrics />}
+          </main>
+        </div>
 
-      <TaskModal
-        isOpen={isOpen}
-        mode={mode}
-        users={users}
-        task={task}
-        onClose={closeModal}
-      />
-    </section>
+        <TaskModal
+          isOpen={isOpen}
+          mode={mode}
+          users={users}
+          task={task}
+          onClose={closeModal}
+        />
+      </section>
+    </>
   );
 }
