@@ -10,13 +10,37 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { useTasks } from "@/hooks/useTasks";
-import { useEffect, useMemo } from "react";
-import { Loader2, CheckCircle2, Clock, XCircle, ListTodo, TrendingUp } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Loader2,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  ListTodo,
+  TrendingUp,
+  ChevronDown,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
 const MONTH_NAMES = [
-  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-  "Jul", "Ago", "Set", "Out", "Nov", "Dez",
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
 ];
 
 const chartConfig = {
@@ -36,6 +60,20 @@ const chartConfig = {
 
 export function TaskMetrics() {
   const { fetchMetrics, metrics, loadingMetrics, errorMetrics } = useTasks();
+  const [expandDetails, setExpandDetails] = useState<boolean>(() => {
+    return localStorage.getItem("expand-details") === "isExpanded";
+  });
+
+  const toggleExpandDetails = () => {
+    setExpandDetails((prev) => {
+      const expand = !prev;
+      localStorage.setItem(
+        "expand-details",
+        expand ? "isExpanded" : "notExpanded",
+      );
+      return expand;
+    });
+  };
 
   useEffect(() => {
     fetchMetrics();
@@ -67,13 +105,12 @@ export function TaskMetrics() {
         done: acc.done + curr.doneTasks,
         canceled: acc.canceled + curr.canceledTasks,
       }),
-      { total: 0, open: 0, done: 0, canceled: 0 }
+      { total: 0, open: 0, done: 0, canceled: 0 },
     );
   }, [formattedData]);
 
-  const completionRate = summary.total > 0 
-    ? Math.round((summary.done / summary.total) * 100) 
-    : 0;
+  const completionRate =
+    summary.total > 0 ? Math.round((summary.done / summary.total) * 100) : 0;
 
   if (loadingMetrics) {
     return (
@@ -94,12 +131,13 @@ export function TaskMetrics() {
   return (
     <div className="h-full w-full overflow-y-auto p-6">
       <div className="max-w-400 mx-auto space-y-6">
-        
         {/* CARDS DE RESUMO ANUAL */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Total Criadas</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-500">
+                Total Criadas
+              </CardTitle>
               <ListTodo className="h-4 w-4 text-slate-500" />
             </CardHeader>
             <CardContent>
@@ -110,45 +148,65 @@ export function TaskMetrics() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Abertas</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-500">
+                Abertas
+              </CardTitle>
               <Clock className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{summary.open}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {summary.open}
+              </div>
               <p className="text-xs text-slate-400">Pendente de conclusão</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Concluídas</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-500">
+                Concluídas
+              </CardTitle>
               <CheckCircle2 className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{summary.done}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {summary.done}
+              </div>
               <p className="text-xs text-slate-400">Finalizadas com sucesso</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Canceladas</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-500">
+                Canceladas
+              </CardTitle>
               <XCircle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{summary.canceled}</div>
-              <p className="text-xs text-slate-400">Descartadas ou canceladas</p>
+              <div className="text-2xl font-bold text-red-600">
+                {summary.canceled}
+              </div>
+              <p className="text-xs text-slate-400">
+                Descartadas ou canceladas
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">Taxa de Conclusão</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-500">
+                Taxa de Conclusão
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-emerald-600">{completionRate}%</div>
-              <p className="text-xs text-slate-400">Proporção concluída/total</p>
+              <div className="text-2xl font-bold text-emerald-600">
+                {completionRate}%
+              </div>
+              <p className="text-xs text-slate-400">
+                Proporção concluída/total
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -157,7 +215,9 @@ export function TaskMetrics() {
         <Card className="w-full overflow-hidden">
           <CardHeader>
             <CardTitle>Visão Mensal Comparativa</CardTitle>
-            <CardDescription>Distribuição do status das tarefas ao longo do ano</CardDescription>
+            <CardDescription>
+              Distribuição do status das tarefas ao longo do ano
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[350px] w-full">
@@ -170,13 +230,29 @@ export function TaskMetrics() {
                     tickMargin={10}
                     axisLine={false}
                   />
-                  <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    allowDecimals={false}
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <ChartLegend content={<ChartLegendContent />} />
 
-                  <Bar dataKey="openTasks" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="doneTasks" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="canceledTasks" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  <Bar
+                    dataKey="openTasks"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="doneTasks"
+                    fill="#22c55e"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="canceledTasks"
+                    fill="#ef4444"
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ChartContainer>
             </div>
@@ -184,38 +260,63 @@ export function TaskMetrics() {
         </Card>
 
         {/* TABELA DE DETALHAMENTO MENSAL */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Detalhamento por Mês</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative w-full overflow-auto">
-              <table className="w-full text-sm text-left text-slate-600 dark:text-slate-300">
-                <thead className="text-xs uppercase bg-slate-100 dark:bg-slate-800 text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">Mês</th>
-                    <th className="px-4 py-3 text-center">Total</th>
-                    <th className="px-4 py-3 text-center">Abertas</th>
-                    <th className="px-4 py-3 text-center">Concluídas</th>
-                    <th className="px-4 py-3 text-center">Canceladas</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                  {formattedData.map((row) => (
-                    <tr key={row.month} className="hover:bg-slate-50 dark:hover:bg-slate-900">
-                      <td className="px-4 py-3 font-medium">{row.monthName}</td>
-                      <td className="px-4 py-3 text-center font-bold">{row.totalTasks}</td>
-                      <td className="px-4 py-3 text-center text-blue-600">{row.openTasks}</td>
-                      <td className="px-4 py-3 text-center text-green-600">{row.doneTasks}</td>
-                      <td className="px-4 py-3 text-center text-red-600">{row.canceledTasks}</td>
+        <div className="relative">
+          <Card>
+            <CardHeader>
+              <CardTitle>Detalhamento por Mês</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`relative w-full ${expandDetails ? "h-full" : "h-20"}`}
+              >
+                <table className="w-full text-sm text-left text-slate-600 dark:text-slate-300">
+                  <thead className="text-xs uppercase bg-slate-100 dark:bg-slate-800 text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3">Mês</th>
+                      <th className="px-4 py-3 text-center">Total</th>
+                      <th className="px-4 py-3 text-center">Abertas</th>
+                      <th className="px-4 py-3 text-center">Concluídas</th>
+                      <th className="px-4 py-3 text-center">Canceladas</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                    {formattedData.map((row) => (
+                      <tr
+                        key={row.month}
+                        className="hover:bg-slate-50 dark:hover:bg-slate-900"
+                      >
+                        <td className="px-4 py-3 font-medium">
+                          {row.monthName}
+                        </td>
+                        <td className="px-4 py-3 text-center font-bold">
+                          {row.totalTasks}
+                        </td>
+                        <td className="px-4 py-3 text-center text-blue-600">
+                          {row.openTasks}
+                        </td>
+                        <td className="px-4 py-3 text-center text-green-600">
+                          {row.doneTasks}
+                        </td>
+                        <td className="px-4 py-3 text-center text-red-600">
+                          {row.canceledTasks}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+          <button
+            onClick={toggleExpandDetails}
+            className={`flex items-center justify-center absolute border-2 border-slate-600 left-193  ${expandDetails ? "top-157" : "top-33"} rounded-full w-10 h-10 bg-white opacity-50 backdrop-blur shadow-2xl`}
+          >
+            <ChevronDown
+              size={28}
+              className={`text-slate-600 hover:text-slate-900 transition-transform hover:scale-110 ${expandDetails ? "rotate-180 duration-1000" : "duration-1000"}`}
+            />
+          </button>
+        </div>
       </div>
     </div>
   );
