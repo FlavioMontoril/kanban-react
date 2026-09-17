@@ -15,12 +15,7 @@ export function useNotificationSubscriptions() {
 
     // 1. Escuta a criação de tarefas
     const createSub = subscribe("/topic/task-created", (newTask: Task) => {
-      console.log("EVENT", createSub);
-      //   addTaskLocal(newTask);
       addNotifications([newTask], "CREATED");
-      toast.success("Nova tarefa adicionada", {
-        description: newTask.title,
-      });
     });
 
     // 2. Escuta o arquivamento de tarefas
@@ -31,7 +26,7 @@ export function useNotificationSubscriptions() {
         removeTasksLocal(archivedIds);
         addNotifications(archivedTasks, "ARCHIVED");
 
-        toast.info(`${archivedTasks.length} tarefa(s) foram arquivadas.`);
+        toast.info(`${archivedTasks.length} tarefa(s) foram arquivadas.`,);
       },
     );
 
@@ -40,9 +35,6 @@ export function useNotificationSubscriptions() {
       (changedStatus: Task) => {
         console.log("STATUS_CHANGED", changedStatus);
         addNotifications([changedStatus], "STATUS_CHANGED");
-        toast.success("Nova tarefa adicionada", {
-          description: changedStatus.title,
-        });
       },
     );
 

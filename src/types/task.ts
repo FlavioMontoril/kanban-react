@@ -56,3 +56,11 @@ export interface ColumnState {
   hasMore: boolean;
   totalElements: number;
 }
+
+export interface TaskMetrics {
+  month: number;
+  totalTasks: number;
+  openTasks: number;
+  doneTasks: number;
+  canceledTasks: number;
+}

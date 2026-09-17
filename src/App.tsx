@@ -16,6 +16,7 @@ import { endOfDay, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
 import { AppHeader } from "./components/AppHeader";
 import { useNotificationSubscriptions } from "./hooks/useNotificationSubscriptions";
 import { EstatisticasTasks } from "./components/commons/EstatisticasTasks";
+import { TaskMetrics } from "./components/TaskMetrics";
 
 export default function App() {
   useNotificationSubscriptions();
@@ -36,6 +37,7 @@ export default function App() {
   const {
     tasks: dataTasks,
     users,
+    pageData,
     selectedStatus,
     selectedView,
     search,
@@ -112,12 +114,14 @@ export default function App() {
     });
   }, [tasks, search, selectedStatus, dateRange]);
 
+  const taskPerView = selectedView === "kanban" ? tasks : pageData;
+
   return (
     <section className={isDarkMode ? "dark" : ""}>
       <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col gap-3">
         <Toaster position="top-center" richColors />
         <AppHeader isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
-        <EstatisticasTasks tasks={tasks} />
+        { selectedView !== "metrics" && <EstatisticasTasks tasks={taskPerView!} />}
         <main className="flex-1 min-h-0 overflow-hidden">
           {selectedView === "kanban" && <KanbanBoard tasks={filtrados} />}
           {selectedView === "Workflows" && (
@@ -144,6 +148,7 @@ export default function App() {
               )}
             </ResizablePanelGroup>
           )}
+          {selectedView === "metrics" && <TaskMetrics/>}
         </main>
       </div>
 

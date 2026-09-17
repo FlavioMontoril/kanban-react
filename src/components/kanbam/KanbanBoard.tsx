@@ -15,7 +15,7 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
   const { loading, moveTaskStatus } = useTasks();
 
   // 4. Handler do Drag & Drop no Board
-  const handleDragEnd = async (result: DropResult) => {
+  const handleDragEnd = (result: DropResult) => {
     const { destination, draggableId } = result;
 
     if (!destination) return;
@@ -38,8 +38,13 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
       return;
     }
 
-    await moveTaskStatus(draggableId, targetStatus);
+    setTimeout(() => {
+      moveTaskStatus(draggableId, targetStatus);
+    }, 0);
   };
+
+  // Garante que é o primeiro carregamento inicial (sem tarefas na memória)
+  const isInitialLoading = loading && (!tasks || tasks.length === 0);
 
   return (
     <>
@@ -110,7 +115,7 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
                         />
                       )}
                     </Droppable> */}
-                    {!tasks || tasks.length === 0 || loading ? (
+                    {isInitialLoading ? (
                       <div className="flex-1 space-y-2.5 overflow-hidden mt-1 [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]">
                         {Array.from({ length: 7 }).map((_, index) => (
                           <div

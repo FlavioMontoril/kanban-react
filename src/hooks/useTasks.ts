@@ -7,6 +7,7 @@ import type { UserResponse } from "@/types/user";
 import { useTaskHistoryStore } from "@/store/useTaskHistories";
 import { useViewStore } from "@/store/useViewStore";
 import type { DateRange } from "react-day-picker";
+import { useTaskMetricsStore } from "@/store/useTaskMetricsStore";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error && typeof error === "object" && "response" in error) {
@@ -36,6 +37,15 @@ export function useTasks() {
     setStatus: setStoreStatus,
   } = useTaskStore();
 
+  const {
+    metrics,
+    loadingMetrics,
+    errorMetrics,
+    setMetrics,
+    setLoadingMetrics,
+    setErrorMetrics,
+  } = useTaskMetricsStore();
+
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +64,7 @@ export function useTasks() {
     // Feedback imediato ao usuário enquanto ele digita
     if (hasActiveFilters) {
       // Usar 'id' fixo impede que o Sonner crie múltiplos cards empilhados
-      toast.loading("Aguardando pausa para buscar...", {
+      toast.loading("Aguardando banco de dados...", {
         position: "bottom-center",
         id: toastIdRef.current,
         description: "A pesquisa iniciará em instantes.",
@@ -108,6 +118,25 @@ export function useTasks() {
       return [];
     }
   }, []);
+
+  const fetchMetrics = useCallback(async () => {
+    setLoadingMetrics(true);
+    setErrorMetrics(null);
+    try {
+      const data = await taskApi.findMetrics();
+      setMetrics(data);
+      return data;
+    } catch (err: unknown) {
+      const msg = getErrorMessage(
+        err,
+        "Erro ao carregar métricas das tarefas.",
+      );
+      setErrorMetrics(msg);
+      return [];
+    } finally {
+      setLoadingMetrics(false);
+    }
+  }, [setMetrics, setLoadingMetrics, setErrorMetrics]);
 
   const fetchTasksPaged = useCallback(async () => {
     setLoading(true);
@@ -188,8 +217,12 @@ export function useTasks() {
         await fetchTasks();
       }
 
+      // Recarrega as métricas após alterar o status
+      fetchMetrics();
+
       toast.success("Tarefa criada", {
-        description: "A tarefa foi criada com sucesso.",
+        position: "top-left",
+        description: "Tarefa foi criada com sucesso.",
       });
     } catch (err: unknown) {
       const msg = getErrorMessage(err, "Erro ao criar tarefa.");
@@ -227,11 +260,12 @@ export function useTasks() {
         status: targetStatus,
       });
 
-      // Não fazemos fetchTasks() aqui.
-      // O card já foi atualizado localmente.
+      // Recarrega as métricas após alterar o status
+      fetchMetrics();
 
       toast.success("Status atualizado", {
-        description: `A tarefa foi movida para "${targetStatus}".`,
+        position: "top-left",
+        description: `status atualizados para: "${targetStatus}".`,
       });
     } catch (err: unknown) {
       console.error("Falha ao atualizar status:", err);
@@ -307,6 +341,9 @@ export function useTasks() {
   return {
     tasks,
     users,
+    metrics,
+    loadingMetrics,
+    errorMetrics,
     pageData,
     selectedStatus,
     selectedView,
@@ -322,10 +359,11 @@ export function useTasks() {
     setSelectedView,
     fetchTasks,
     fetchTasksPaged,
+    fetchTasksHistories,
     fetchUsers,
+    fetchMetrics,
     setStatus,
     setSearch,
-    fetchTasksHistories,
     createTask,
     moveTaskStatus,
   };

@@ -1,40 +1,3 @@
-// import type { Task } from '@/types/task';
-// import { create } from 'zustand';
-// import { persist, createJSONStorage } from 'zustand/middleware';
-
-// interface NotificationState {
-//   notifications: Task[];
-//   addNotifications: (newTasks: Task[]) => void;
-//   markAsRead: (taskId: string) => void;
-//   clearAll: () => void;
-// }
-
-// export const useNotificationStore = create<NotificationState>()(
-//   persist(
-//     (set) => ({
-//       notifications: [],
-
-//       addNotifications: (newTasks) =>
-//         set((state) => {
-//           const existingIds = new Set(state.notifications.map((t) => t.id));
-//           const filteredNewTasks = newTasks.filter((t) => !existingIds.has(t.id));
-//           return { notifications: [...filteredNewTasks, ...state.notifications] };
-//         }),
-
-//       markAsRead: (taskId) =>
-//         set((state) => ({
-//           notifications: state.notifications.filter((t) => t.id !== taskId),
-//         })),
-
-//       clearAll: () => set({ notifications: [] }),
-//     }),
-//     {
-//       name: 'kanban-notifications-storage',
-//       storage: createJSONStorage(() => localStorage),
-//     }
-//   )
-// );
-
 import type { Task } from "@/types/task";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
@@ -46,12 +9,14 @@ export interface AppNotification {
   type: NotificationType;
   task: Task;
   createdAt: string;
+  read: boolean;
 }
 
 interface NotificationState {
   notifications: AppNotification[];
   addNotification: (task: Task, type: NotificationType) => void;
   addNotifications: (newTasks: Task[], type: NotificationType) => void;
+  removeNotification: (notificationId: string) => void;
   markAsRead: (notificationId: string) => void;
   clearAll: () => void;
 }
@@ -69,6 +34,7 @@ export const useNotificationStore = create<NotificationState>()(
             type,
             task,
             createdAt: new Date().toISOString(),
+            read: false,
           };
 
           return {
@@ -98,6 +64,7 @@ export const useNotificationStore = create<NotificationState>()(
             type,
             task,
             createdAt: new Date().toISOString(),
+            read: false,
           }));
 
           return {
@@ -105,10 +72,19 @@ export const useNotificationStore = create<NotificationState>()(
           };
         }),
 
-      markAsRead: (notificationId) =>
+      removeNotification: (notificationId) =>
         set((state) => ({
           notifications: state.notifications.filter(
             (n) => n.id !== notificationId,
+          ),
+        })),
+
+      markAsRead: (notificationId) =>
+        set((state) => ({
+          notifications: state.notifications.map((notification) =>
+            notification.id === notificationId
+              ? { ...notification, read: true }
+              : notification,
           ),
         })),
 

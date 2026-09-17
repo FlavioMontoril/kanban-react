@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,24 +8,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TaskStatus, type Task } from "@/types/task";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { STATUS_CONFIG } from "./utils/task-status.config";
 import { useTasks } from "@/hooks/useTasks";
 import { useFlowStore } from "../flow/store/useFlowStore";
+import { TaskDropdownMenu } from "../commons/TaskDropdownMenuCard";
+import { useTaskModalStore } from "@/store/useTaskModalStore";
 
 interface ITaskTable {
   data: Task[];
 }
 
 export function TableTask({ data }: ITaskTable) {
-  const {
-    pageData,
-    currentPage,
-    size,
-    loading,
-    setCurrentPage,
-  } = useTasks();
+  const { pageData, currentPage, size, loading, setCurrentPage } = useTasks();
   const { selectedTaskId, setSelectedTaskId } = useFlowStore();
+  const { openModal } = useTaskModalStore();
+
+  const [task, setTask] = useState<Task | null>(null);
 
   const stats = useMemo(() => {
     return {
@@ -42,6 +41,12 @@ export function TableTask({ data }: ITaskTable) {
     size * (currentPage + 1),
     pageData?.totalElements ?? data.length,
   );
+
+  function handleSelectAction(action: "edit" | "delete" | "updateStatus") {
+    if (action === "edit") openModal("edit", task);
+    // if (action === "delete") openModal("delete", task);
+    if (action === "updateStatus") openModal("updateStatus", task);
+  }
 
   return (
     <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-0 md:p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
@@ -102,7 +107,6 @@ export function TableTask({ data }: ITaskTable) {
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${status.bg} ${status.text}`}
                           >
-                            {status.icon}
                             {status.label}
                           </span>
                         </TableCell>
@@ -125,13 +129,18 @@ export function TableTask({ data }: ITaskTable) {
                         </TableCell>
 
                         {/* Ações */}
-                        <TableCell className="text-right">
-                          <button
-                            type="button"
-                            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                          >
-                            <MoreHorizontal size={16} />
-                          </button>
+                        <TableCell
+                          className="text-right"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTask(task);
+                          }}
+                        >
+                          {task.status !== TaskStatus.CANCELED && (
+                            <TaskDropdownMenu
+                              onSelectAction={handleSelectAction}
+                            />
+                          )}
                         </TableCell>
                       </TableRow>
                     );

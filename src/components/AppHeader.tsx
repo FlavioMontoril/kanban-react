@@ -103,7 +103,7 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
               className={cn(
                 "flex items-center transition-all duration-[1500ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
                 isBandejaAberta
-                  ? "max-w-[calc(90vw-190px)] sm:max-w-[1250px] opacity-100 pr-1 sm:pr-2 pointer-events-auto"
+                  ? "max-w-[calc(90vw-205px)] sm:max-w-[1250px] opacity-100 pr-1 sm:pr-2 pointer-events-auto"
                   : "max-w-0 opacity-0 pr-0 pointer-events-none",
               )}
             >
