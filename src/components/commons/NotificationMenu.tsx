@@ -42,7 +42,8 @@ const eventDetails: Record<
 function formatNotificationDate(dateString: string): string {
   if (!dateString) return "Agora";
   try {
-    const parsedDate = typeof dateString === "string" ? parseISO(dateString) : dateString;
+    const parsedDate =
+      typeof dateString === "string" ? parseISO(dateString) : dateString;
     return format(parsedDate, "dd/MM 'às' HH:mm", { locale: ptBR });
   } catch {
     return "Agora";
@@ -58,12 +59,8 @@ export function NotificationMenu() {
   });
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const {
-    notifications,
-    markAsRead,
-    removeNotification,
-    clearAll,
-  } = useNotificationStore();
+  const { notifications, markAsRead, removeNotification, clearAll } =
+    useNotificationStore();
 
   // Contador apenas das não lidas para o badge do botão principal
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -137,33 +134,42 @@ export function NotificationMenu() {
               </div>
 
               {/* TABS DE FILTRO */}
-              <div className="px-4 pb-3 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("ALL")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                    activeTab === "ALL"
-                      ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-                      : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                  }`}
-                >
-                  Todas
-                  <span className="ml-0.5 px-1.5 py-0.2 rounded-md bg-white dark:bg-slate-900 text-[10px] font-bold shadow-xs text-slate-600 dark:text-slate-400">
-                    {notifications.length}
-                  </span>
-                </button>
+              <div className="px-4 pb-3 flex items-center justify-between gap-2">
+                <div className="flex">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("ALL")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                      activeTab === "ALL"
+                        ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                        : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    }`}
+                  >
+                    Todas
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-md bg-white dark:bg-slate-900 text-[10px] font-bold shadow-xs text-slate-600 dark:text-slate-400">
+                      {notifications.length}
+                    </span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("SYSTEM")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                    activeTab === "SYSTEM"
-                      ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-                      : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                  }`}
-                >
-                  Sistema
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("SYSTEM")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                      activeTab === "SYSTEM"
+                        ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                        : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    }`}
+                  >
+                    Sistema
+                  </button>
+                </div>
+                <div className="px-4">
+                  {unreadCount >= 1 && (
+                    <span className="nline-flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                      {`${unreadCount} Não lida${unreadCount > 1 ? "s" : ""}`}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* LISTA DE CARDS DAS NOTIFICAÇÕES */}
@@ -171,7 +177,9 @@ export function NotificationMenu() {
                 {filteredNotifications.length === 0 ? (
                   <div className="py-10 text-center text-slate-400 dark:text-slate-500">
                     <Bell size={32} className="mx-auto mb-2 opacity-30" />
-                    <p className="text-xs font-medium">Nenhuma notificação encontrada.</p>
+                    <p className="text-xs font-medium">
+                      Nenhuma notificação encontrada.
+                    </p>
                   </div>
                 ) : (
                   filteredNotifications.map((item) => {
@@ -244,8 +252,7 @@ export function NotificationMenu() {
                                 }}
                                 className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-emerald-500 transition p-1 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
                                 title="Marcar como lida"
-                              >
-                              </button>
+                              ></button>
                             )}
 
                             {/* BOTÃO INDIVIDUAL DE REMOVER NOTIFICAÇÃO */}
