@@ -10,6 +10,7 @@ import { useTasks } from "@/hooks/useTasks";
 import { AssigneeSelect } from "../commons/AssigneeSelect";
 import type { UserResponse } from "@/types/user";
 import { STATUS_CONFIG } from "@/components/kanbam/utils/task-status.config";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   onClose,
 }) => {
   const { createTask, moveTaskStatus } = useTasks();
+  const {user} = useAuthStore()
 
   const [formData, setFormData] = useState<TaskRequestDTO>({
     code: "",
@@ -45,7 +47,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           code: task.code,
           title: task.title,
           description: task.description,
-          reporter: task.reporter,
+          reporter: task.reporter || user?.name || "",
           assignee: task.assignee || "",
           userId: task.userId || "",
         });
@@ -55,7 +57,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           code: "",
           title: "",
           description: "",
-          reporter: "",
+          reporter: user?.name || "",
           assignee: "",
           userId: "",
         });
@@ -173,7 +175,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   <input
                     type="text"
                     required
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || Boolean(user?.name)}
                     value={formData.reporter}
                     placeholder="Nome do relator"
                     onChange={(e) =>
