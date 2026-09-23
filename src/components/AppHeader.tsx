@@ -5,6 +5,7 @@ import {
   LogOut,
   Moon,
   PackagePlus,
+  PencilSparkles,
   Search,
   Settings,
   Shield,
@@ -45,6 +46,7 @@ import {
 import { UserManagementModal } from "./UserManagementModal";
 import { useAuth } from "@/hooks/useAuth";
 import { getAvatarUrl } from "@/lib/getAvatarUrl";
+import { toast } from "sonner";
 
 interface AppHeaderProps {
   isDarkMode: boolean;
@@ -55,7 +57,7 @@ interface AppHeaderProps {
 export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
   const { openModal } = useTaskModalStore();
   const { logout } = useAuthStore();
-  const { users } = useAuth();
+  const { users, avatarUpload } = useAuth();
   const {
     selectedStatus,
     selectedView,
@@ -70,8 +72,11 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
 
   const [isUserModalOpen, setIsUserModalOpen] = useState<boolean>(false);
   const [isBandejaAberta, setIsBandejaAberta] = useState<boolean>(false);
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   // Redireciona o scroll vertical da roda do mouse para scroll horizontal
   const handleWheelScroll = (e: React.WheelEvent<HTMLDivElement>) => {
     if (!scrollContainerRef.current) return;
@@ -105,6 +110,27 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
   const handleLogout = () => {
     logout();
     sessionStorage.removeItem("has-seen-splash");
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      await avatarUpload(user.id, formData);
+      toast.success("Foto do perfil atualizada!", {
+        position: "bottom-left",
+      });
+    } catch (error) {
+      console.error("Erro ao enviar o avatar:", error);
+      toast.error("Erro ao atualizar foto do perfil.");
+    } finally {
+      // Limpa o valor para permitir selecionar o mesmo arquivo novamente se necessário
+      e.target.value = "";
+    }
   };
 
   // Extrai as iniciais do nome do usuário para o fallback do Avatar
@@ -313,13 +339,31 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                   className="w-80 p-2 rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xl"
                 >
                   {/* CARD SUPERIOR ESTILO GOOGLE ACCOUNTS */}
-                  <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-800/50 text-center relative overflow-hidden">
-                    <Avatar className="w-16 h-16 mb-3 shadow-md border-2 border-white dark:border-slate-700">
+                  <div className="group relative flex flex-col items-center justify-center p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-800/50 text-center overflow-hidden">
+                    <Avatar className="w-16 h-16 mb-3 shadow-md border-2 border-blue-600 group-hover:border-slate-400 dark:border-slate-700">
                       <AvatarImage src={avatarUrl!} alt={user.name} />
                       <AvatarFallback className="text-lg font-bold">
                         {userInitials}
                       </AvatarFallback>
                     </Avatar>
+
+                    {/* Input de arquivo invisível */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    {/* Botão que aciona a seleção do arquivo */}
+                    <button onClick={() => fileInputRef.current?.click()}>
+                      <div
+                        title="Editar foto do perfil"
+                        className="invisible group-hover:visible transition-transform hover:scale-105 cursor-pointer absolute left-42 bottom-38 w-6 h-6 rounded-full bg-slate-400 flex justify-center items-center"
+                      >
+                        <PencilSparkles size={15} color="white" />
+                      </div>
+                    </button>
 
                     <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 leading-tight">
                       {user.name}

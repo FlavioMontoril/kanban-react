@@ -3,9 +3,21 @@ import { apiAuth } from "./apiAuth";
 import type { LoginRequest, LoginResponse } from "@/types/authentication";
 import type { RoleResponse } from "@/types/role";
 
+export interface MessageResponse {
+  message: string;
+}
+
 export const authApi = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await apiAuth.post<LoginResponse>("/api/auth/login", data);
+    return response.data;
+  },
+
+  updateAvatar: async (
+    userId: string,
+    data: FormData,
+  ): Promise<MessageResponse> => {
+    const response = await apiAuth.patch(`/api/users/${userId}/avatar`, data);
     return response.data;
   },
 
@@ -24,9 +36,6 @@ export const authApi = {
     return response.data;
   },
 
-  /**
-   * Busca uma role específica pelo ID
-   */
   findRoleById: async (roleId: string): Promise<RoleResponse> => {
     const response = await apiAuth.get<RoleResponse>(`/api/roles/${roleId}`);
     return response.data;

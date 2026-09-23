@@ -46,6 +46,22 @@ export function useAuth() {
     }
   };
 
+
+  const avatarUpload = async (userId: string, data: FormData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authApi.updateAvatar(userId, data);
+      fetchUsers();
+    } catch (err: any) {
+      const message = err.response?.data?.message || "Erro ao criar utilizador";
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchUsers = useCallback(async () => {
     try {
       const data = await authApi.findAllUsers();
@@ -74,6 +90,7 @@ export function useAuth() {
     login,
     loading,
     error,
+    avatarUpload,
     createUser,
     fetchRoles,
     fetchUsers,
