@@ -116,12 +116,12 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
+      <div className="w-full max-w-2xl overflow-hidden rounded-2xl dark:bg-slate-900 bg-white shadow-2xl transition-all">
         {/* Cabeçalho */}
-        <div className="flex items-center justify-between border-b border-gray-100 p-5">
+        <div className="flex items-center justify-between border-b dark:border-black border-gray-100 p-5">
           <div className="flex items-center gap-2">
             <Users className="h-6 w-6 text-purple-600" />
-            <h2 className="text-xl font-bold text-gray-800">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-slate-200">
               Gerenciamento de Usuários
             </h2>
           </div>
@@ -318,7 +318,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   return (
                     <div
                       key={user.id}
-                      className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50/50 p-3 hover:bg-gray-50"
+                      className="flex items-center justify-between rounded-xl border border-gray-100 dark:border-black dark:bg-slate-800 dark:hover:bg-slate-700 bg-gray-50/50 p-3 hover:bg-gray-50"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-purple-100 text-purple-700 font-bold">
@@ -333,10 +333,10 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                           )}
                         </div>
                         <div>
-                          <h4 className="text-sm font-bold text-gray-800">
+                          <h4 className="text-sm font-bold dark:text-white text-gray-800">
                             {user.name}
                           </h4>
-                          <p className="text-xs text-gray-500">{user.email}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-300 dark:hover:text-gray-400">{user.email}</p>
                         </div>
                       </div>
 
