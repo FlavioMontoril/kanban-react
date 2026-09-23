@@ -3,10 +3,15 @@ import { TaskStatus, type Task } from "@/types/task";
 import { TaskHoverCard } from "../commons/TaskHoverCard";
 import { TaskDropdownMenu } from "../commons/TaskDropdownMenuCard";
 import { useTaskModalStore } from "@/store/useTaskModalStore";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import type { UserResponse } from "@/types/user";
+import { useMemo } from "react";
+import { getAvatarUrl } from "@/lib/getAvatarUrl";
 
 // 1. Adicione as props passadas pelo VirtualizedTaskList aqui
 interface TaskCardProps {
   task: Task;
+  user: UserResponse;
   index: number;
   provided?: DraggableProvided;
   isDragging?: boolean;
@@ -14,6 +19,7 @@ interface TaskCardProps {
 
 export const TaskCardVirtualized: React.FC<TaskCardProps> = ({
   task,
+  user,
   provided,
   isDragging,
 }) => {
@@ -24,6 +30,17 @@ export const TaskCardVirtualized: React.FC<TaskCardProps> = ({
     // if (action === "delete") openModal("delete", task);
     if (action === "updateStatus") openModal("updateStatus", task);
   }
+
+  const userInitials = useMemo(() => {
+    if (!user?.name) return "US";
+    const parts = user.name.trim().split(" ");
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
+  }, [user?.name]);
+
+  const avatarUrl = getAvatarUrl(user?.avatar);
 
   return (
     <div
@@ -47,14 +64,19 @@ export const TaskCardVirtualized: React.FC<TaskCardProps> = ({
           )}
         </div>
       </div>
-
-      <div>
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
-          Relator
-        </p>
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-0.5">
-          {task.reporter}
-        </p>
+      <div className="flex justify-between">
+        <div>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+            Relator
+          </p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-0.5">
+            {task.reporter}
+          </p>
+        </div>
+        <Avatar title={`Responsável: ${user?.name}`} className="w-7 h-7">
+          <AvatarImage src={avatarUrl!} alt={user?.name} />
+          <AvatarFallback>{userInitials}</AvatarFallback>
+        </Avatar>
       </div>
 
       <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 dark:text-slate-500">

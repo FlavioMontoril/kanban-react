@@ -6,6 +6,7 @@ import { getIcon, getIconColor } from "./utils/task-status.config";
 import { VirtualizedTaskList } from "./virtualized-task-list";
 import { TaskCardVirtualized } from "./TaskCardVirtualized";
 import { Skeleton } from "../ui/skeleton";
+import { useUserStore } from "@/store/useUserStore";
 
 interface IKanbanBoard {
   tasks: Task[];
@@ -13,6 +14,7 @@ interface IKanbanBoard {
 
 export default function KanbanBoard({ tasks }: IKanbanBoard) {
   const { loading, moveTaskStatus } = useTasks();
+  const { users } = useUserStore();
 
   // 4. Handler do Drag & Drop no Board
   const handleDragEnd = (result: DropResult) => {
@@ -146,9 +148,15 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
 
                             if (!task) return null;
 
+                            // Busca o avatar do único usuário responsável por essa tarefa
+                            const taskUserAvatar = users.find(
+                              (user) => user.id === task.userId,
+                            );
+
                             return (
                               <TaskCardVirtualized
                                 task={task}
+                                user={taskUserAvatar!}
                                 index={taskIndex}
                                 provided={provided}
                                 isDragging={snapshot.isDragging}
@@ -158,6 +166,7 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
                         >
                           {(provided, snapshot) => (
                             <VirtualizedTaskList
+                              users={users}
                               columnTasks={columnTasks}
                               provided={provided}
                               isDraggingOver={snapshot.isDraggingOver}
