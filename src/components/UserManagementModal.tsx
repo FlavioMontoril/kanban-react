@@ -321,13 +321,23 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                       className="flex items-center justify-between rounded-xl border border-gray-100 dark:border-black dark:bg-slate-800 dark:hover:bg-slate-700 bg-gray-50/50 p-3 hover:bg-gray-50"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-purple-100 text-purple-700 font-bold">
+                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-purple-100 text-purple-700 font-bold relative">
                           {user.avatar ? (
-                            <img
-                              src={avatarUrl!}
-                              alt={user.name}
-                              className="h-full w-full object-cover"
-                            />
+                            <>
+                              <img
+                                src={avatarUrl!}
+                                alt={user.name}
+                                className="h-full w-full object-cover" 
+                              />
+                              <span
+                                className={`absolute bottom-2 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${
+                                  user.connected
+                                    ? "bg-emerald-500"
+                                    : "bg-slate-400"
+                                }`}
+                                title={user.connected ? "Online" : "Offline"}
+                              />
+                            </>
                           ) : (
                             user.name.charAt(0).toUpperCase()
                           )}
@@ -336,7 +346,9 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                           <h4 className="text-sm font-bold dark:text-white text-gray-800">
                             {user.name}
                           </h4>
-                          <p className="text-xs text-gray-500 dark:text-gray-300 dark:hover:text-gray-400">{user.email}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-300 dark:hover:text-gray-400">
+                            {user.email}
+                          </p>
                         </div>
                       </div>
 

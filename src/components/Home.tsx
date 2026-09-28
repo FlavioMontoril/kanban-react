@@ -15,7 +15,7 @@ import {
 import { endOfDay, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
 import { AppHeader } from "./AppHeader";
 import { useNotificationSubscriptions } from "../hooks/useNotificationSubscriptions";
-import { EstatisticasTasks } from "./commons/EstatisticasTasks";
+// import { EstatisticasTasks } from "./commons/EstatisticasTasks";
 import { TaskMetrics } from "./TaskMetrics";
 import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "./commons/SplashScreen";
@@ -46,7 +46,7 @@ export function Home() {
 
   const {
     tasks: dataTasks,
-    pageData,
+    // pageData,
     selectedStatus,
     selectedView,
     search,
@@ -129,7 +129,7 @@ export function Home() {
     });
   }, [tasks, search, selectedStatus, dateRange]);
 
-  const taskPerView = selectedView === "kanban" ? tasks : pageData;
+  // const taskPerView = selectedView === "kanban" ? tasks : pageData;
 
   return (
     <>
@@ -142,9 +142,9 @@ export function Home() {
         <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col gap-3">
           <Toaster position="top-center" richColors />
           <AppHeader user={user!} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
-          {selectedView !== "metrics" && (
+          {/* {selectedView !== "metrics" && (
             <EstatisticasTasks tasks={taskPerView!} />
-          )}
+          )} */}
           <main className="flex-1 min-h-0 overflow-hidden">
             {selectedView === "kanban" && <KanbanBoard tasks={filtrados} />}
             {selectedView === "Workflows" && (

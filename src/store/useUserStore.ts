@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { UserResponse } from "@/types/user";
+import type { UserPresenceDTO, UserResponse } from "@/types/user";
 import type { RoleResponse } from "@/types/role";
 
 interface UserState {
@@ -7,6 +7,7 @@ interface UserState {
   roles: RoleResponse[];
   setUsers: (users: UserResponse[]) => void;
   setRoles: (roles: RoleResponse[]) => void;
+  updateUserPresence: (presence: UserPresenceDTO) => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({
@@ -14,4 +15,12 @@ export const useUserStore = create<UserState>((set) => ({
   roles: [],
   setUsers: (users) => set({ users }),
   setRoles: (roles) => set({ roles }),
+  updateUserPresence: (presence) =>
+    set((state) => ({
+      users: state.users.map((user) =>
+        user.id === presence.id
+          ? { ...user, connected: presence.connected }
+          : user
+      ),
+    })),
 }));

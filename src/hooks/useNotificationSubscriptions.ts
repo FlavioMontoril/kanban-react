@@ -4,17 +4,29 @@ import { useTaskStore } from "@/store/useTaskStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { toast } from "sonner";
 import type { Task } from "@/types/task";
+import { useAuthWebSocket } from "@/providers/AuthWebSocketProvider";
+import type { UserPresenceDTO } from "@/types/user";
+import {
+  showAuthPresenceToast,
+  showGuestPresenceToast,
+} from "@/components/commons/showAuthPresenceToast";
+import { useUserStore } from "@/store/useUserStore";
 
 export function useNotificationSubscriptions() {
   const { isConnected, subscribe } = useWebSocket();
-  const { removeTasksLocal } = useTaskStore();
-  const { addNotifications } = useNotificationStore();
+  const { isConnected: isAuthConnected, subscribe: subscribeAuth } =
+    useAuthWebSocket();
+  const { removeTasksLocal, setTask } = useTaskStore();
+  const { addNotifications, addPresenceNotification } = useNotificationStore();
+  const {updateUserPresence} = useUserStore()
 
   useEffect(() => {
     if (!isConnected) return;
 
     // 1. Escuta a criação de tarefas
     const createSub = subscribe("/topic/task-created", (newTask: Task) => {
+      console.log("newTask", newTask);
+      setTask(newTask);
       addNotifications([newTask], "CREATED");
     });
 
@@ -26,14 +38,15 @@ export function useNotificationSubscriptions() {
         removeTasksLocal(archivedIds);
         addNotifications(archivedTasks, "ARCHIVED");
 
-        toast.info(`${archivedTasks.length} tarefa(s) foram arquivadas.`,);
+        toast.info(`${archivedTasks.length} tarefa(s) foram arquivadas.`);
       },
     );
 
     const changeStatus = subscribe(
       "/topic/task-status-changed",
       (changedStatus: Task) => {
-        console.log("STATUS_CHANGED", changedStatus);
+        console.log("[STATUS_CHANGED]", changedStatus);
+        setTask(changedStatus);
         addNotifications([changedStatus], "STATUS_CHANGED");
       },
     );
@@ -50,5 +63,37 @@ export function useNotificationSubscriptions() {
     // addTaskLocal,
     removeTasksLocal,
     addNotifications,
+  ]);
+
+  // 2. Subscrição da Auth API (Presença)
+  useEffect(() => {
+    if (!isAuthConnected) return;
+
+    // Subscrição do tópico /topic/presence vindo da Auth API
+    const presenceSub = subscribeAuth(
+      "/topic/presence",
+      (presenceData: UserPresenceDTO) => {
+        console.log("[USER CONNECTING]:", presenceData);
+        updateUserPresence(presenceData)
+        addPresenceNotification(presenceData, "CONNECTION");
+
+        //Exibe o Popup de Entrada/Saída conforme a autenticação
+        if (isAuthConnected) {
+          showAuthPresenceToast(presenceData);
+        } else {
+          showGuestPresenceToast(presenceData, () => {
+            window.location.href = "/login";
+          });
+        }
+      },
+    );
+
+    return () => {
+      presenceSub?.unsubscribe();
+    };
+  }, [
+    isAuthConnected,
+    subscribeAuth,
+    //  addPresenceNotification
   ]);
 }

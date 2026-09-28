@@ -73,10 +73,12 @@ export const TaskCardVirtualized: React.FC<TaskCardProps> = ({
             {task.reporter}
           </p>
         </div>
-        <Avatar title={`Responsável: ${user?.name}`} className="w-7 h-7">
-          <AvatarImage src={avatarUrl!} alt={user?.name} />
-          <AvatarFallback>{userInitials}</AvatarFallback>
-        </Avatar>
+        <div className="relative group/avatar cursor-pointer">
+          <Avatar title={`Responsável: ${user?.name}`} className="w-7 h-7 transition-all duration-300 ease-in-out group-hover/avatar:scale-200 group-hover/avatar:z-50 group-hover/avatar:shadow-lg origin-right">
+            <AvatarImage src={avatarUrl!} alt={user?.name} />
+            <AvatarFallback>{userInitials}</AvatarFallback>
+          </Avatar>
+        </div>
       </div>
 
       <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 dark:text-slate-500">

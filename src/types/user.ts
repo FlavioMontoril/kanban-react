@@ -3,6 +3,7 @@ export interface UserResponse {
   name: string;
   email: string;
   avatar: string;
+  connected: boolean;
   roleId: string;
 }
 
@@ -12,4 +13,11 @@ export interface UserRequest {
   password: string;
   avatar?: File | null;
   roleId: string;
+}
+
+export interface UserPresenceDTO {
+    id: string;
+    name: string;
+    avatar: string | null;
+    connected: boolean;
 }
