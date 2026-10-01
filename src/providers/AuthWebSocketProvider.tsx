@@ -46,7 +46,6 @@ export const AuthWebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    // 🎯 URL do WebSocket da API de Autenticação (ex: http://localhost:8081/ws)
     const AUTH_WS_URL = import.meta.env.VITE_AUTH_WS_URL;
 
     const client = new Client({

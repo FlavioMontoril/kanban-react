@@ -34,8 +34,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     code: "",
     title: "",
     description: "",
-    reporter: "",
-    assignee: "",
+    reporterId: "",
     userId: "",
   });
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
@@ -47,8 +46,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           code: task.code,
           title: task.title,
           description: task.description,
-          reporter: task.reporter || user?.name || "",
-          assignee: task.assignee || "",
+          reporterId: task.reporterId || user?.id || "",
           userId: task.userId || "",
         });
         setSelectedStatus(null);
@@ -57,8 +55,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           code: "",
           title: "",
           description: "",
-          reporter: user?.name || "",
-          assignee: "",
+          reporterId: user?.id || "",
           userId: "",
         });
       }
@@ -176,11 +173,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                     type="text"
                     required
                     disabled={isReadOnly || Boolean(user?.name)}
-                    value={formData.reporter}
+                    value={user?.name}
                     placeholder="Nome do relator"
-                    onChange={(e) =>
-                      setFormData({ ...formData, reporter: e.target.value })
-                    }
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-medium focus:outline-hidden focus:border-violet-500 transition-colors disabled:opacity-60"
                   />
                 </div>

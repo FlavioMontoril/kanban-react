@@ -121,7 +121,11 @@ export function Home() {
 
       if (!q) return true;
 
-      return [a.assignee, a.status, a.code, a.title, a.description, a.reporter]
+      // Resolve os nomes de assignee e reporter através do array users
+    const assigneeName = users.find((u) => u.id === a.userId)?.name;
+    const reporterName = users.find((u) => u.id === a.reporterId)?.name;
+
+      return [assigneeName, a.status, a.code, a.title, a.description, reporterName]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()

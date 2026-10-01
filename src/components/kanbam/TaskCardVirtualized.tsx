@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import type { UserResponse } from "@/types/user";
 import { useMemo } from "react";
 import { getAvatarUrl } from "@/lib/getAvatarUrl";
+import { useAuth } from "@/hooks/useAuth";
 
 // 1. Adicione as props passadas pelo VirtualizedTaskList aqui
 interface TaskCardProps {
@@ -24,6 +25,10 @@ export const TaskCardVirtualized: React.FC<TaskCardProps> = ({
   isDragging,
 }) => {
   const { openModal } = useTaskModalStore();
+  const { users } = useAuth();
+
+  const reporterName =
+    users.find((u) => u.id === task.reporterId)?.name || "Não informado";
 
   function handleSelectAction(action: "edit" | "delete" | "updateStatus") {
     if (action === "edit") openModal("edit", task);
@@ -70,11 +75,14 @@ export const TaskCardVirtualized: React.FC<TaskCardProps> = ({
             Relator
           </p>
           <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-0.5">
-            {task.reporter}
+            {reporterName}
           </p>
         </div>
         <div className="relative group/avatar cursor-pointer">
-          <Avatar title={`Responsável: ${user?.name}`} className="w-7 h-7 transition-all duration-300 ease-in-out group-hover/avatar:scale-200 group-hover/avatar:z-50 group-hover/avatar:shadow-lg origin-right">
+          <Avatar
+            title={`Responsável: ${user?.name}`}
+            className="w-7 h-7 transition-all duration-300 ease-in-out group-hover/avatar:scale-200 group-hover/avatar:z-50 group-hover/avatar:shadow-lg origin-right"
+          >
             <AvatarImage src={avatarUrl!} alt={user?.name} />
             <AvatarFallback>{userInitials}</AvatarFallback>
           </Avatar>

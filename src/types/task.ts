@@ -12,15 +12,14 @@ export interface Task {
   title: string;
   description: string;
   status: TaskStatus;
-  reporter: string;
-  assignee: string | null;
+  reporterId: string;
   createdAt: string;
   updatedAt: string | null;
   archived: boolean;
   userId?: string | null;
 }
 
-export type TaskRequestDTO = Pick<Task, 'code' | 'title' | 'description' | 'reporter' | 'assignee' | 'userId'>
+export type TaskRequestDTO = Pick<Task, 'code' | 'title' | 'description' | 'reporterId' | 'userId'>
 
 export interface UpdateTaskStatusDTO {
   status: TaskStatus;

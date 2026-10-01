@@ -25,7 +25,6 @@ export function useNotificationSubscriptions() {
 
     // 1. Escuta a criação de tarefas
     const createSub = subscribe("/topic/task-created", (newTask: Task) => {
-      console.log("newTask", newTask);
       setTask(newTask);
       addNotifications([newTask], "CREATED");
     });
@@ -45,7 +44,6 @@ export function useNotificationSubscriptions() {
     const changeStatus = subscribe(
       "/topic/task-status-changed",
       (changedStatus: Task) => {
-        console.log("[STATUS_CHANGED]", changedStatus);
         setTask(changedStatus);
         addNotifications([changedStatus], "STATUS_CHANGED");
       },
@@ -73,7 +71,6 @@ export function useNotificationSubscriptions() {
     const presenceSub = subscribeAuth(
       "/topic/presence",
       (presenceData: UserPresenceDTO) => {
-        console.log("[USER CONNECTING]:", presenceData);
         updateUserPresence(presenceData)
         addPresenceNotification(presenceData, "CONNECTION");
 

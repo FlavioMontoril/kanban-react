@@ -323,24 +323,20 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-purple-100 text-purple-700 font-bold relative">
                           {user.avatar ? (
-                            <>
-                              <img
-                                src={avatarUrl!}
-                                alt={user.name}
-                                className="h-full w-full object-cover" 
-                              />
-                              <span
-                                className={`absolute bottom-2 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${
-                                  user.connected
-                                    ? "bg-emerald-500"
-                                    : "bg-slate-400"
-                                }`}
-                                title={user.connected ? "Online" : "Offline"}
-                              />
-                            </>
+                            <img
+                              src={avatarUrl!}
+                              alt={user.name}
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             user.name.charAt(0).toUpperCase()
                           )}
+                          <span
+                            className={`absolute bottom-2 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${
+                              user.connected ? "bg-emerald-500" : "bg-slate-400"
+                            }`}
+                            title={user.connected ? "Online" : "Offline"}
+                          />
                         </div>
                         <div>
                           <h4 className="text-sm font-bold dark:text-white text-gray-800">
