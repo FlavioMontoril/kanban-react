@@ -12,6 +12,7 @@ import { TaskStatus, type Task } from "@/types/task";
 import { memo } from "react";
 import { STATUS_CONFIG } from "@/components/kanbam/utils/task-status.config";
 import { useTaskHistoryStore } from "@/store/useTaskHistories";
+import { useAuth } from "@/hooks/useAuth";
 
 export type SquareNodeData = {
   task?: Task;
@@ -20,6 +21,7 @@ export type SquareNodeData = {
 export type SquareNode = Node<SquareNodeData, "square">;
 
 function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
+  const { users } = useAuth();
   const deleteSquareNode = useFlowStore((state) => state.deleteNodeCascade);
   const addChildNode = useFlowStore((state) => state.addChildNode);
   const edges = useFlowStore((state) => state.edges);
@@ -45,6 +47,9 @@ function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
   const status = task?.status
     ? STATUS_CONFIG[task.status]
     : STATUS_CONFIG[TaskStatus.OPEN];
+
+  const reporterName =
+    users.find((u) => u.id === task?.reporterId)?.name || "Não informado";
 
   // Formatação simples para a data de criação
   const formatDate = (dateString?: string) => {
@@ -180,7 +185,7 @@ function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
               <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800/60 px-2 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700/50 w-full">
                 <User size={11} className="text-slate-400 shrink-0" />
                 <span className="truncate max-w-[180px] font-medium">
-                  {task?.reporter || "Sem relator"}
+                  {reporterName || "Sem relator"}
                 </span>
               </div>
             </div>

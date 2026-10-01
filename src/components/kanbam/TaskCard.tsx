@@ -3,6 +3,7 @@ import { TaskStatus, type Task } from "@/types/task";
 import { TaskHoverCard } from "../commons/TaskHoverCard";
 import { TaskDropdownMenu } from "../commons/TaskDropdownMenuCard";
 import { useTaskModalStore } from "@/store/useTaskModalStore";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TaskCardProps {
   task: Task;
@@ -11,6 +12,10 @@ interface TaskCardProps {
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const { openModal } = useTaskModalStore();
+  const { users } = useAuth();
+
+  const reporterName =
+    users.find((u) => u.id === task.reporterId)?.name || "Não informado";
 
   function handleSelectAction(action: "edit" | "delete" | "updateStatus") {
     if (action === "edit") {
@@ -56,7 +61,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
               Relator
             </p>
             <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-0.5">
-              {task.reporter}
+              {reporterName}
             </p>
           </div>
 

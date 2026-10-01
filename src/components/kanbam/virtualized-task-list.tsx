@@ -7,14 +7,17 @@ import {
   type DroppableProvided,
 } from "@hello-pangea/dnd";
 import { TaskCardVirtualized } from "./TaskCardVirtualized";
+import type { UserResponse } from "@/types/user";
 
 interface VirtualizedTaskListProps {
   columnTasks: Task[];
+  users: UserResponse[];
   provided: DroppableProvided | DraggableProvided;
   isDraggingOver: boolean;
 }
 export function VirtualizedTaskList({
   columnTasks,
+  users,
   provided,
   isDraggingOver,
 }: VirtualizedTaskListProps) {
@@ -84,6 +87,9 @@ export function VirtualizedTaskList({
         {rowVirtualizer.getVirtualItems().map((virtualItem) => {
           const task = columnTasks[virtualItem.index];
 
+          // Encontra o usuário correspondente e obtém a string do avatar (fallback para string vazia se não encontrar)
+          const userAvatar = users.find((u) => u.id === task.userId);
+
           return (
             <div
               key={task.id}
@@ -101,6 +107,7 @@ export function VirtualizedTaskList({
                   // Quando o item está sendo arrastado, o renderClone assume a renderização flutuante.
                   return (
                     <TaskCardVirtualized
+                      user={userAvatar!}
                       task={task}
                       index={virtualItem.index}
                       provided={draggableProvided}
