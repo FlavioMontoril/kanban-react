@@ -1,4 +1,3 @@
-import { Toaster } from "sonner";
 import KanbanBoard from "./kanbam/KanbanBoard";
 import { useEffect, useMemo, useState } from "react";
 import { useTasks } from "../hooks/useTasks";
@@ -144,7 +143,6 @@ export function Home() {
       </AnimatePresence>
       <section className={isDarkMode ? "dark" : ""}>
         <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col gap-3">
-          <Toaster position="top-center" richColors />
           <AppHeader user={user!} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
           {/* {selectedView !== "metrics" && (
             <EstatisticasTasks tasks={taskPerView!} />

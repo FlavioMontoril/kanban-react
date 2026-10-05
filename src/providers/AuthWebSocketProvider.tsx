@@ -51,6 +51,11 @@ export const AuthWebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     const client = new Client({
       webSocketFactory: () => new SockJS(AUTH_WS_URL),
 
+      // Injeta o token diretamente na criação do objeto
+      connectHeaders: {
+        Authorization: `Bearer ${Cookies.get("auth_token") || ""}`,
+      },
+
       beforeConnect: () => {
         const token = Cookies.get("auth_token");
         if (token) {

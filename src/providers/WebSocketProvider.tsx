@@ -54,17 +54,24 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     console.log("[WebSocketProvider] 🔌 Iniciando conexão...");
 
-    const WS_URL = import.meta.env.VITE_WS_URL;
+    const WS_URL= import.meta.env.VITE_WS_URL;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS(WS_URL),
+      webSocketFactory: () => new SockJS(WS_URL, null, {withCredentials: true} as any),
 
-      beforeConnect: () => {
-        const token = Cookies.get("auth_token");
-        if (token) {
-          client.connectHeaders = { Authorization: `Bearer ${token}` };
-        }
+      //Definimos o Header Authorization diretamente no objeto de configuração
+      connectHeaders: {
+        Authorization: `Bearer ${currentToken}`,
       },
+      
+      // webSocketFactory: () => new SockJS(WS_URL),
+
+      // beforeConnect: () => {
+      //   const token = Cookies.get("auth_token");
+      //   if (token) {
+      //     client.connectHeaders = { Authorization: `Bearer ${token}` };
+      //   }
+      // },
 
       reconnectDelay: 5000, // Tenta reconectar a cada 5 segundos se a conexão cair
       heartbeatIncoming: 10000,
@@ -97,9 +104,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     clientRef.current = client;
 
     return () => {
-      console.log("[WebSocketProvider] 🔌 Desativando conexão...");
-      client.deactivate();
-      setIsConnected(false);
+     // Desativa apenas se o componente for realmente desmontado ao deslogar
+      if (!Cookies.get("auth_token")) {
+        console.log("[WebSocketProvider] 🔌 Encerrando cliente STOMP...");
+        client.deactivate();
+        setIsConnected(false);
+        clientRef.current = null;
+      }
     };
     //Ao colocar `isAuthenticated` ou a checagem do cookie na dependência,
     // o useEffect roda novamente no momento exato em que o usuário faz login!
