@@ -1,4 +1,4 @@
-import type { ChatRoom, CreateRoomPayload, Message } from "@/types/chat/chat";
+import type { ChatRoom, CreateRoomPayload, Message, SendMessagePayload } from "@/types/chat/chat";
 import { api } from "./api";
 
 
@@ -17,5 +17,10 @@ export const chatService = {
     const response = await api.get(`/api/v1/chats/rooms/${roomId}/messages?size=50`);
     // O Spring Data Pageable retorna os itens no atributo 'content'
     return response.data.content || response.data;
+  },
+
+  async sendMessage(payload: SendMessagePayload): Promise<Message> {
+    const response = await api.post<Message>("/api/v1/chats/messages", payload);
+    return response.data;
   },
 };
