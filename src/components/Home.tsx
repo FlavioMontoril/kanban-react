@@ -41,7 +41,7 @@ export function Home() {
   const { setSelectedTaskId, selectedTaskId } = useFlowStore();
   const { isOpen, mode, task, closeModal } = useTaskModalStore();
   const { users, fetchUsers, fetchRoles } = useAuth();
-  const {user} = useAuthStore()
+  const { user } = useAuthStore();
 
   const {
     tasks: dataTasks,
@@ -121,10 +121,17 @@ export function Home() {
       if (!q) return true;
 
       // Resolve os nomes de assignee e reporter através do array users
-    const assigneeName = users.find((u) => u.id === a.userId)?.name;
-    const reporterName = users.find((u) => u.id === a.reporterId)?.name;
+      const assigneeName = users.find((u) => u.id === a.userId)?.name;
+      const reporterName = users.find((u) => u.id === a.reporterId)?.name;
 
-      return [assigneeName, a.status, a.code, a.title, a.description, reporterName]
+      return [
+        assigneeName,
+        a.status,
+        a.code,
+        a.title,
+        a.description,
+        reporterName,
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
@@ -143,7 +150,11 @@ export function Home() {
       </AnimatePresence>
       <section className={isDarkMode ? "dark" : ""}>
         <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 flex flex-col gap-3">
-          <AppHeader user={user!} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+          <AppHeader
+            user={user!}
+            isDarkMode={isDarkMode}
+            toggleTheme={toggleTheme}
+          />
           {/* {selectedView !== "metrics" && (
             <EstatisticasTasks tasks={taskPerView!} />
           )} */}

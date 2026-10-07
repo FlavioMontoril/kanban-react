@@ -1,12 +1,12 @@
 export interface UserAuth {
-  id: number;
+  id: string;
   name: string;
   email: string;
 }
 
 export interface ChatParticipant {
   id: string;
-  userId: number;
+  userId: string;
   role: 'ADMIN' | 'MEMBER';
   joinedAt: string;
 }
@@ -14,7 +14,7 @@ export interface ChatParticipant {
 export interface ChatRoom {
   id: string;
   name?: string;
-  isGroup: boolean;
+  type: ChatType;
   createdAt: string;
   participants: ChatParticipant[];
   lastMessage?: string;
@@ -24,18 +24,24 @@ export interface ChatRoom {
 export interface Message {
   id: string;
   roomId: string;
-  senderId: number;
+  senderId: string;
   content: string;
   timestamp: string;
 }
 
 export interface CreateRoomPayload {
   name?: string;
-  isGroup: boolean;
-  participantUserIds: number[];
+  type: 'DIRECT' | 'GROUP';
+  targetUserIds: string[];
 }
 
 export interface SendMessagePayload {
   roomId: string;
   content: string;
 }
+
+export enum ChatType {
+    DIRECT = "DIRECT",
+    GROUP = "GROUP",
+}
+

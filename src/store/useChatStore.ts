@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { ChatRoom, Message, UserAuth } from "@/types/chat/chat";
 import { authApi } from "@/services/authService";
 import type { UserResponse } from "@/types/user";
+import type { ChatRoom, Message, UserAuth } from "@/types/chat-types";
 
 interface ChatState {
   rooms: ChatRoom[];

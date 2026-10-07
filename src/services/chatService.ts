@@ -1,4 +1,4 @@
-import type { ChatRoom, CreateRoomPayload, Message, SendMessagePayload } from "@/types/chat/chat";
+import type { ChatRoom, CreateRoomPayload, Message, SendMessagePayload } from "@/types/chat-types";
 import { api } from "./api";
 
 

@@ -3,7 +3,7 @@ import Login from "./pages/login";
 import { AppLayout } from "./layout/AppLayout";
 import { Home } from "./components/Home";
 import { ProtectedRoute } from "./ProtectedRoute";
-import ChatPage from "./pages/chat";
+import ChatPage from "./pages/chatPage";
 
 export function AppRoutes() {
   return (
