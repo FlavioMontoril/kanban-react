@@ -3,6 +3,7 @@ import {
   Eraser,
   LayoutGridIcon,
   LogOut,
+  MessageCircleIcon,
   Moon,
   PackagePlus,
   PencilSparkles,
@@ -47,6 +48,8 @@ import { UserManagementModal } from "./UserManagementModal";
 import { useAuth } from "@/hooks/useAuth";
 import { getAvatarUrl } from "@/lib/getAvatarUrl";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useChatNotificationStore } from "@/store/useChatNotificationStore";
 
 interface AppHeaderProps {
   isDarkMode: boolean;
@@ -69,14 +72,18 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
     setCurrentPage,
     setSelectedView,
   } = useTasks();
-
+  
   const [isUserModalOpen, setIsUserModalOpen] = useState<boolean>(false);
   const [isBandejaAberta, setIsBandejaAberta] = useState<boolean>(false);
+  
+  const unreadByRoom = useChatNotificationStore((state) => state.unreadByRoom);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const navigate = useNavigate();
+
   // Redireciona o scroll vertical da roda do mouse para scroll horizontal
   const handleWheelScroll = (e: React.WheelEvent<HTMLDivElement>) => {
     if (!scrollContainerRef.current) return;
@@ -146,6 +153,11 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
   const avatar = users.find((u) => u.id === user.id)?.avatar;
   const avatarUrl = getAvatarUrl(avatar!);
 
+  const totalUnread = Object.values(unreadByRoom).reduce(
+    (acc, count) => acc + count,
+    0
+  );
+
   return (
     <>
       <header className="relative w-full p-3 sm:p-5">
@@ -181,6 +193,23 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                   className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto custom-scrollbar-horizontal scroll-smooth"
                 >
                   <TabsViews value={selectedView} onSelect={setSelectedView} />
+
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => navigate("/chat")}
+                        title="Crie uma nova tarefa"
+                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+                      >
+                        <MessageCircleIcon size={18} />
+                      </button>
+
+                      {totalUnread > 0 && (
+                        <span className="absolute -top-0 -right-0 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                          {totalUnread > 99 ? "99+" : totalUnread}
+                        </span>
+                      )}
+                    </div>
 
                   <button
                     type="button"

@@ -26,6 +26,11 @@ export const authApi = {
     return response.data;
   },
 
+  findUserById: async (id: string): Promise<UserResponse> => {
+    const response = await apiAuth.get<UserResponse>(`/api/users/${id}`)
+    return response.data;
+  },
+
   findAllUsers: async (): Promise<UserResponse[]> => {
     const response = await apiAuth.get<UserResponse[]>("/api/users");
     return response.data;

@@ -3,6 +3,7 @@ import Login from "./pages/login";
 import { AppLayout } from "./layout/AppLayout";
 import { Home } from "./components/Home";
 import { ProtectedRoute } from "./ProtectedRoute";
+import ChatPage from "./pages/chatPage";
 
 export function AppRoutes() {
   return (
@@ -11,6 +12,7 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/chat" element={<ChatPage />} />
         </Route>
       </Route>
     </Routes>

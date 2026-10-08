@@ -18,11 +18,13 @@ interface WebSocketContextType {
     destination: string,
     callback: (message: any) => void,
   ) => StompSubscription | null;
+  publish: (destination: string, body: any) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
   isConnected: false,
   subscribe: () => null,
+  publish: ()=> {},
 });
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -116,6 +118,20 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     // o useEffect roda novamente no momento exato em que o usuário faz login!
   }, [isAuthenticated]);
 
+  const publish = useCallback((destination: string, body: any) => {
+  if (!clientRef.current || !clientRef.current.connected) {
+    console.warn(
+      `[WebSocketProvider] Tentativa de envio para "${destination}" falhou: Socket desconectado.`
+    );
+    return;
+  }
+
+  clientRef.current.publish({
+    destination,
+    body: JSON.stringify(body),
+  });
+}, []);
+
   // Função genérica para qualquer componente se inscrever em qualquer tópico
   const subscribe = useCallback(
     (destination: string, callback: (message: any) => void) => {
@@ -142,7 +158,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   return (
-    <WebSocketContext.Provider value={{ isConnected, subscribe }}>
+    <WebSocketContext.Provider value={{ isConnected, subscribe, publish }}>
       {children}
     </WebSocketContext.Provider>
   );
