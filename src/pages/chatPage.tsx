@@ -57,6 +57,7 @@ export default function ChatPage() {
   const handleSelectRoom = (room: ChatRoom) => {
     setActiveRoom(room);
     clearUnreadForRoom(room.id);
+    clearUnreadForRoom(String(room.id));
   };
 
   // Busca EXCLUSIVAMENTE na useUserStore() sem misturar com useAuthStore
@@ -135,6 +136,11 @@ export default function ChatPage() {
     getRoomDisplayName(room).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // 1. Filtra as mensagens atreladas exclusivamente à sala selecionada
+const activeRoomMessages = messages.filter(
+  (msg) => msg.roomId === activeRoom?.id
+);
+
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-zinc-950 overflow-hidden font-sans text-slate-800 dark:text-zinc-100">
       {/* SIDEBAR DE CONVERSAS */}
@@ -202,7 +208,7 @@ export default function ChatPage() {
               const isOnline = Boolean(targetUser?.connected);
 
               // 4. Quantidade de mensagens não lidas para esta sala
-              const unreadCount = unreadByRoom[room.id] || 0;
+              const unreadCount = unreadByRoom[room.id] || unreadByRoom[String(room.id)] || 0;
 
               return (
                 <div
@@ -316,7 +322,7 @@ export default function ChatPage() {
 
             {/* MENSAGENS */}
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
-              {messages.map((msg) => {
+              {activeRoomMessages.map((msg) => {
                 const isMe = String(msg.senderId) === String(user?.id);
 
                 const senderUser = getUserFromUserStore(msg.senderId);

@@ -1,4 +1,3 @@
-// src/store/useFloatingChatStore.ts
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { ChatRoom } from "@/types/chat-types";
@@ -8,31 +7,71 @@ interface RoomPosition {
   y: number;
 }
 
-interface FloatingChatState {
+interface UserFloatingState {
   activeRooms: ChatRoom[];
-  expandedRoomId: string | null;
   positions: Record<string, RoomPosition>;
+}
 
-  openFloatingChat: (room: ChatRoom) => void;
+interface FloatingChatState {
+  userStates: Record<string, UserFloatingState>;
+  expandedRoomId: string | null;
+
+  openFloatingChat: (
+    userId: string | number | undefined,
+    room: ChatRoom
+  ) => void;
   toggleExpandRoom: (roomId: string) => void;
   closeChatModal: () => void;
-  removeRoomBubble: (roomId: string) => void;
-  updateRoomPosition: (roomId: string, deltaX: number, deltaY: number) => void;
-  clearAll: () => void;
+  removeRoomBubble: (
+    userId: string | number | undefined,
+    roomId: string
+  ) => void;
+  updateRoomPosition: (
+    userId: string | number | undefined,
+    roomId: string,
+    deltaX: number,
+    deltaY: number
+  ) => void;
+  clearAllForUser: (userId: string | number | undefined) => void;
+
+  getUserState: (userId?: string | number) => UserFloatingState;
 }
 
 export const useFloatingChatStore = create<FloatingChatState>()(
   persist(
-    (set) => ({
-      activeRooms: [],
+    (set, get) => ({
+      userStates: {},
       expandedRoomId: null,
-      positions: {},
 
-      openFloatingChat: (room) =>
+      getUserState: (userId) => {
+        if (!userId) return { activeRooms: [], positions: {} };
+        const key = String(userId);
+        return get().userStates[key] || { activeRooms: [], positions: {} };
+      },
+
+      openFloatingChat: (userId, room) =>
         set((state) => {
-          const exists = state.activeRooms.some((r) => r.id === room.id);
+          if (!userId) return state;
+          const key = String(userId);
+          const currentUserState = state.userStates[key] || {
+            activeRooms: [],
+            positions: {},
+          };
+
+          const exists = currentUserState.activeRooms.some(
+            (r) => r.id === room.id
+          );
+
           return {
-            activeRooms: exists ? state.activeRooms : [...state.activeRooms, room],
+            userStates: {
+              ...state.userStates,
+              [key]: {
+                ...currentUserState,
+                activeRooms: exists
+                  ? currentUserState.activeRooms
+                  : [...currentUserState.activeRooms, room],
+              },
+            },
             expandedRoomId: room.id,
           };
         }),
@@ -44,35 +83,78 @@ export const useFloatingChatStore = create<FloatingChatState>()(
 
       closeChatModal: () => set({ expandedRoomId: null }),
 
-      removeRoomBubble: (roomId) =>
-        set((state) => ({
-          activeRooms: state.activeRooms.filter((r) => r.id !== roomId),
-          expandedRoomId: state.expandedRoomId === roomId ? null : state.expandedRoomId,
-        })),
-
-      updateRoomPosition: (roomId, deltaX, deltaY) =>
+      removeRoomBubble: (userId, roomId) =>
         set((state) => {
-          const currentPos = state.positions[roomId] || { x: 20, y: 100 };
+          if (!userId) return state;
+          const key = String(userId);
+          const currentUserState = state.userStates[key];
+
+          if (!currentUserState) return state;
+
           return {
-            positions: {
-              ...state.positions,
-              [roomId]: {
-                x: Math.max(0, currentPos.x + deltaX),
-                y: Math.max(0, currentPos.y + deltaY),
+            userStates: {
+              ...state.userStates,
+              [key]: {
+                ...currentUserState,
+                activeRooms: currentUserState.activeRooms.filter(
+                  (r) => r.id !== roomId
+                ),
+              },
+            },
+            expandedRoomId:
+              state.expandedRoomId === roomId ? null : state.expandedRoomId,
+          };
+        }),
+
+      updateRoomPosition: (userId, roomId, deltaX, deltaY) =>
+        set((state) => {
+          if (!userId) return state;
+          const key = String(userId);
+          const currentUserState = state.userStates[key] || {
+            activeRooms: [],
+            positions: {},
+          };
+
+          const currentPos = currentUserState.positions[roomId] || {
+            x: 20,
+            y: 100,
+          };
+
+          return {
+            userStates: {
+              ...state.userStates,
+              [key]: {
+                ...currentUserState,
+                positions: {
+                  ...currentUserState.positions,
+                  [roomId]: {
+                    x: Math.max(0, currentPos.x + deltaX),
+                    y: Math.max(0, currentPos.y + deltaY),
+                  },
+                },
               },
             },
           };
         }),
 
-      clearAll: () => set({ activeRooms: [], expandedRoomId: null, positions: {} }),
+      clearAllForUser: (userId) =>
+        set((state) => {
+          if (!userId) return state;
+          const key = String(userId);
+          const newUserStates = { ...state.userStates };
+          delete newUserStates[key];
+
+          return {
+            userStates: newUserStates,
+            expandedRoomId: null,
+          };
+        }),
     }),
     {
-      name: "floating-chat-storage", // Chave no localStorage
+      name: "floating-chat-storage",
       storage: createJSONStorage(() => localStorage),
-      // Salva apenas os balões ativos e suas posições (mantém o modal minimizado ao recarregar)
       partialize: (state) => ({
-        activeRooms: state.activeRooms,
-        positions: state.positions,
+        userStates: state.userStates,
       }),
     }
   )

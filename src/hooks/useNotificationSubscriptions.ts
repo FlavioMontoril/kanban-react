@@ -18,13 +18,18 @@ export function useNotificationSubscriptions() {
     useAuthWebSocket();
   const { removeTasksLocal, setTask } = useTaskStore();
   const { addNotifications, addPresenceNotification } = useNotificationStore();
-  const {updateUserPresence} = useUserStore()
+  const { updateUserPresence } = useUserStore();
 
   useEffect(() => {
     if (!isConnected) return;
 
+    console.log(
+      "[useNotificationSubscriptions] 🟢 Inscrevendo nos tópicos do Kanban...",
+    );
+
     // 1. Escuta a criação de tarefas
     const createSub = subscribe("/topic/task-created", (newTask: Task) => {
+      console.log("[WEBSOCKET] Tarefa criada recebida:", newTask);
       setTask(newTask);
       addNotifications([newTask], "CREATED");
     });
@@ -33,6 +38,7 @@ export function useNotificationSubscriptions() {
     const archiveSub = subscribe(
       "/topic/tasks-archived",
       (archivedTasks: Task[]) => {
+        console.log("[WEBSOCKET] Tarefas arquivadas recebidas:", archivedTasks);
         const archivedIds = archivedTasks.map((t) => t.id);
         removeTasksLocal(archivedIds);
         addNotifications(archivedTasks, "ARCHIVED");
@@ -44,6 +50,7 @@ export function useNotificationSubscriptions() {
     const changeStatus = subscribe(
       "/topic/task-status-changed",
       (changedStatus: Task) => {
+        console.log("[WEBSOCKET] Alteração de status recebida:", changedStatus);
         setTask(changedStatus);
         addNotifications([changedStatus], "STATUS_CHANGED");
       },
@@ -55,13 +62,7 @@ export function useNotificationSubscriptions() {
       archiveSub?.unsubscribe();
       changeStatus?.unsubscribe();
     };
-  }, [
-    isConnected,
-    subscribe,
-    // addTaskLocal,
-    removeTasksLocal,
-    addNotifications,
-  ]);
+  }, [isConnected, subscribe, removeTasksLocal, addNotifications]);
 
   // 2. Subscrição da Auth API (Presença)
   useEffect(() => {
@@ -71,7 +72,7 @@ export function useNotificationSubscriptions() {
     const presenceSub = subscribeAuth(
       "/topic/presence",
       (presenceData: UserPresenceDTO) => {
-        updateUserPresence(presenceData)
+        updateUserPresence(presenceData);
         addPresenceNotification(presenceData, "CONNECTION");
 
         //Exibe o Popup de Entrada/Saída conforme a autenticação
@@ -91,6 +92,7 @@ export function useNotificationSubscriptions() {
   }, [
     isAuthConnected,
     subscribeAuth,
-    //  addPresenceNotification
+    updateUserPresence,
+    addPresenceNotification,
   ]);
 }

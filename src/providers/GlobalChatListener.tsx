@@ -101,7 +101,7 @@
 import { useAuthStore } from "@/store/useAuthStore";
 import { useWebSocket } from "./WebSocketProvider";
 import { useChatStore } from "@/store/useChatStore";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { ChatRoom, Message } from "@/types/chat-types";
 import { chatService } from "@/services/chatService";
 import { useChatNotificationStore } from "@/store/useChatNotificationStore";
@@ -116,107 +116,106 @@ export function GlobalChatListener({
 }) {
   const { user } = useAuthStore();
   const { isConnected, subscribe } = useWebSocket();
-  const { addRoom } = useChatStore();
 
-  // ESCUTA EM TEMPO REAL: Novas salas/conversas criadas (/topic/user/{userId}/rooms)
+  const isFetchingRoomsRef = useRef(false);
+
   useEffect(() => {
     if (!user?.id || !isConnected) return;
 
-    const subscription = subscribe(
+    const currentUserIdStr = String(user.id).trim();
+
+    const subRooms = subscribe(
       `/topic/user/${user.id}/rooms`,
       (newRoom: ChatRoom) => {
         console.log("[EVENTO DE SALA RECEBIDO]: ", newRoom);
-        addRoom(newRoom);
-      },
+        useChatStore.getState().addRoom(newRoom);
+      }
     );
 
-    return () => {
-      if (subscription) subscription.unsubscribe();
-    };
-  }, [user?.id, isConnected, subscribe, addRoom]);
-
-  // 3. ESCUTA EM TEMPO REAL: Mensagens recebidas em tempo real (/topic/user/{userId}/messages)
-  // ESCUTA MENSAGENS EM TEMPO REAL
-  useEffect(() => {
-    if (!user?.id || !isConnected) return;
-
-    const subscription = subscribe(
+    const subMessages = subscribe(
       `/topic/user/${user.id}/messages`,
       async (newMessage: Message) => {
         console.log("[EVENTO DE MENSAGEM RECEBIDO]: ", newMessage);
 
-        const currentUserId = String(user.id).trim();
-        const senderId = String(newMessage.senderId || "").trim();
-        const isFromOtherUser = senderId !== "" && senderId !== currentUserId;
+        const senderIdStr = newMessage.senderId
+          ? String(newMessage.senderId).trim()
+          : "";
+        const messageRoomIdStr = String(newMessage.roomId).trim();
+
+        // É de outro usuário se senderId existir e for diferente do ID do usuário logado
+        const isFromOtherUser =
+          Boolean(senderIdStr) && senderIdStr !== currentUserIdStr;
 
         const chatStore = useChatStore.getState();
         const notificationStore = useChatNotificationStore.getState();
         const userStore = useUserStore.getState();
-        const floatingChatStore = useFloatingChatStore.getState();
 
-        // 1. Verifica se o utilizador está na rota do chat
         const isOnChatPage = window.location.pathname.startsWith("/chat");
 
-        // 2. A sala está selecionada na página /chat?
+        const activeRoomIdStr = chatStore.activeRoom?.id
+          ? String(chatStore.activeRoom.id).trim()
+          : "";
+        const floatingRoomIdStr = useFloatingChatStore.getState().expandedRoomId
+          ? String(useFloatingChatStore.getState().expandedRoomId).trim()
+          : "";
+
         const isMainChatActive =
-          isOnChatPage && chatStore.activeRoom?.id === newMessage.roomId;
+          isOnChatPage && activeRoomIdStr === messageRoomIdStr;
+        const isFloatingModalOpen = floatingRoomIdStr === messageRoomIdStr;
 
-        // 3. A janela flutuante desta sala está expandida/aberta?
-        const isFloatingModalOpen =
-          floatingChatStore.expandedRoomId === newMessage.roomId;
-
-        // A conversa só é considerada visível se o utilizador estiver na página /chat OU com o modal flutuante expandido
         const isRoomVisibleToUser = isMainChatActive || isFloatingModalOpen;
 
-        let currentRooms = chatStore.rooms;
-        let targetRoom = currentRooms.find((r) => r.id === newMessage.roomId);
+        console.log("[GlobalChatListener Debug]", {
+          currentUserId: currentUserIdStr,
+          senderId: senderIdStr,
+          isFromOtherUser,
+          isMainChatActive,
+          isFloatingModalOpen,
+          isRoomVisibleToUser,
+        });
 
-        // Se a sala não constar na lista local, procura via API
-        if (!targetRoom) {
+        // 1. Sempre adiciona a mensagem ao histórico local da store
+        chatStore.addMessage(newMessage);
+
+        // 2. Procura a sala correspondente na store local com comparação insensível ao tipo
+        let targetRoom = chatStore.rooms.find(
+          (r) => String(r.id).trim() === messageRoomIdStr
+        );
+
+        // Se a sala não estiver na memória, busca via API
+        if (!targetRoom && !isFetchingRoomsRef.current) {
+          isFetchingRoomsRef.current = true;
           try {
             const updatedRooms = await chatService.getUserRooms();
             if (updatedRooms) {
               chatStore.setRooms(updatedRooms);
-              currentRooms = updatedRooms;
-              targetRoom = updatedRooms.find((r) => r.id === newMessage.roomId);
+              targetRoom = updatedRooms.find(
+                (r) => String(r.id).trim() === messageRoomIdStr
+              );
             }
           } catch (err) {
             console.error("[GlobalChatListener] Erro ao carregar salas:", err);
+          } finally {
+            isFetchingRoomsRef.current = false;
           }
         }
 
+        // Garante buscar dados do usuário remetente
         if (newMessage.senderId) {
           chatStore.fetchUserById(String(newMessage.senderId));
         }
 
-        // Adiciona sempre a mensagem ao histórico local
-        chatStore.addMessage(newMessage);
-
-        // Notifica + Exibe Toast se for de outro utilizador e a janela NÃO estiver visível/expandida
+        // 3. Notifica e exibe o Toast apenas se for de outro usuário e a conversa NÃO estiver ativa
         if (isFromOtherUser && !isRoomVisibleToUser) {
-          notificationStore.incrementUnread(newMessage.roomId);
+          notificationStore.incrementUnread(messageRoomIdStr);
 
-         if (targetRoom) {
-            // Se o utilizador NÃO estiver na rota de chat, adiciona o balão flutuante
-            if (!isOnChatPage) {
-              const currentFloatingStore = useFloatingChatStore.getState();
-              const isBubbleOnScreen = currentFloatingStore.activeRooms.some(
-                (r) => r.id === targetRoom!.id
-              );
-
-              if (!isBubbleOnScreen) {
-                // Adiciona a sala às bolhas ativas mantendo o modal minimizado de início
-                useFloatingChatStore.setState((state) => ({
-                  activeRooms: [...state.activeRooms, targetRoom!],
-                }));
-              }
-            }
-
+          if (targetRoom) {
             const senderUser = userStore.users.find(
-              (u) => String(u.id) === String(newMessage.senderId)
+              (u) => String(u.id).trim() === senderIdStr
             );
 
             showMessageToast({
+              userId: user.id,
               room: targetRoom,
               message: newMessage,
               senderName: senderUser?.name || senderUser?.email || "Usuário",
@@ -224,11 +223,16 @@ export function GlobalChatListener({
             });
           }
         }
-      },
+      }
     );
 
     return () => {
-      if (subscription) subscription.unsubscribe();
+      if (subRooms && typeof subRooms.unsubscribe === "function") {
+        subRooms.unsubscribe();
+      }
+      if (subMessages && typeof subMessages.unsubscribe === "function") {
+        subMessages.unsubscribe();
+      }
     };
   }, [user?.id, isConnected, subscribe]);
 

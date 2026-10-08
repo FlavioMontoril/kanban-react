@@ -72,16 +72,16 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
     setCurrentPage,
     setSelectedView,
   } = useTasks();
-  
+
   const [isUserModalOpen, setIsUserModalOpen] = useState<boolean>(false);
   const [isBandejaAberta, setIsBandejaAberta] = useState<boolean>(false);
-  
+
   const unreadByRoom = useChatNotificationStore((state) => state.unreadByRoom);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const navigate = useNavigate();
 
   // Redireciona o scroll vertical da roda do mouse para scroll horizontal
@@ -155,7 +155,7 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
 
   const totalUnread = Object.values(unreadByRoom).reduce(
     (acc, count) => acc + count,
-    0
+    0,
   );
 
   return (
@@ -193,23 +193,6 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                   className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto custom-scrollbar-horizontal scroll-smooth"
                 >
                   <TabsViews value={selectedView} onSelect={setSelectedView} />
-
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => navigate("/chat")}
-                        title="Crie uma nova tarefa"
-                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
-                      >
-                        <MessageCircleIcon size={18} />
-                      </button>
-
-                      {totalUnread > 0 && (
-                        <span className="absolute -top-0 -right-0 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
-                          {totalUnread > 99 ? "99+" : totalUnread}
-                        </span>
-                      )}
-                    </div>
 
                   <button
                     type="button"
@@ -321,6 +304,7 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
               />
 
               {/* BOTÃO FIXO DA BANDEJA */}
+              <div className="flex gap-2">
               <Button
                 variant="ghost"
                 onClick={() => setIsBandejaAberta((prev) => !prev)}
@@ -352,110 +336,127 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                   </span>
                 )}
               </Button>
-
-              {/**USUARIO LOGAGO */}
-              <DropdownMenu>
-                <DropdownMenuTrigger className="rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 hover:opacity-90 transition-opacity">
-                  <Avatar title={user.name} className="w-7 h-7">
-                    <AvatarImage src={avatarUrl!} alt={user.name} />
-                    <AvatarFallback>{userInitials}</AvatarFallback>
-                    <AvatarBadge className="bg-emerald-500 dark:bg-emerald-600" />
-                  </Avatar>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent
-                  align="end"
-                  className="w-80 p-2 rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xl"
-                >
-                  {/* CARD SUPERIOR ESTILO GOOGLE ACCOUNTS */}
-                  <div className="group relative flex flex-col items-center justify-center p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-800/50 text-center overflow-hidden">
-                    <Avatar className="w-16 h-16 mb-3 shadow-md border-2 border-blue-600 group-hover:border-slate-400 dark:border-slate-700">
+                {/**USUARIO LOGAGO */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 hover:opacity-90 transition-opacity">
+                    <Avatar title={user.name} className="w-7 h-7">
                       <AvatarImage src={avatarUrl!} alt={user.name} />
-                      <AvatarFallback className="text-lg font-bold">
-                        {userInitials}
-                      </AvatarFallback>
+                      <AvatarFallback>{userInitials}</AvatarFallback>
+                      <AvatarBadge className="bg-emerald-500 dark:bg-emerald-600" />
                     </Avatar>
+                  </DropdownMenuTrigger>
 
-                    {/* Input de arquivo invisível */}
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                    {/* Botão que aciona a seleção do arquivo */}
-                    <button onClick={() => fileInputRef.current?.click()}>
-                      <div
-                        title="Editar foto do perfil"
-                        className="invisible group-hover:visible transition-transform hover:scale-105 cursor-pointer absolute left-42 bottom-38 w-6 h-6 rounded-full bg-slate-400 flex justify-center items-center"
-                      >
-                        <PencilSparkles size={15} color="white" />
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-80 rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xl"
+                  >
+                    {/* CARD SUPERIOR ESTILO GOOGLE ACCOUNTS */}
+                    <div className="group relative flex flex-col items-center justify-center p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-800/50 text-center overflow-hidden">
+                      <Avatar className="w-16 h-16 mb-3 shadow-md border-2 border-blue-600 group-hover:border-slate-400 dark:border-slate-700">
+                        <AvatarImage src={avatarUrl!} alt={user.name} />
+                        <AvatarFallback className="text-lg font-bold">
+                          {userInitials}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      {/* Input de arquivo invisível */}
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      {/* Botão que aciona a seleção do arquivo */}
+                      <button onClick={() => fileInputRef.current?.click()}>
+                        <div
+                          title="Editar foto do perfil"
+                          className="invisible group-hover:visible transition-transform hover:scale-105 cursor-pointer absolute left-42 bottom-38 w-6 h-6 rounded-full bg-slate-400 flex justify-center items-center"
+                        >
+                          <PencilSparkles size={15} color="white" />
+                        </div>
+                      </button>
+
+                      <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 leading-tight">
+                        {user.name}
+                      </h3>
+
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 break-all max-w-[220px]">
+                        {user.email}
+                      </p>
+
+                      <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[11px] font-semibold border border-indigo-500/20">
+                        <Shield className="w-3 h-3" />
+                        <span>{user.role}</span>
                       </div>
-                    </button>
 
-                    <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 leading-tight">
-                      {user.name}
-                    </h3>
-
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 break-all max-w-[220px]">
-                      {user.email}
-                    </p>
-
-                    <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[11px] font-semibold border border-indigo-500/20">
-                      <Shield className="w-3 h-3" />
-                      <span>{user.role}</span>
+                      {/* BOTÃO PRINCIPAL DE AÇÃO ESTILO GOOGLE */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-4 w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white border-none shadow-md font-semibold text-xs h-8 cursor-pointer active:scale-[0.98] transition-all"
+                      >
+                        Gerenciar Conta
+                      </Button>
                     </div>
 
-                    {/* BOTÃO PRINCIPAL DE AÇÃO ESTILO GOOGLE */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-4 w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white border-none shadow-md font-semibold text-xs h-8 cursor-pointer active:scale-[0.98] transition-all"
-                    >
-                      Gerenciar Conta
-                    </Button>
-                  </div>
-
-                  {/* GRUPO DE OPÇÕES */}
-                  <DropdownMenuGroup className="mt-2 space-y-1">
-                    <DropdownMenuItem className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-slate-800">
-                      <User className="w-4 h-4 text-slate-400" />
-                      <span>Perfil do Usuário</span>
-                    </DropdownMenuItem>
-                    {user.role === "ADMIN" && (
-                      <DropdownMenuItem
-                        onClick={() => setIsUserModalOpen(true)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-slate-800"
-                      >
-                        <UserCog className="w-4 h-4 text-slate-400" />
-                        <span>Gerenciar Usuários</span>
+                    {/* GRUPO DE OPÇÕES */}
+                    <DropdownMenuGroup className="mt-2 space-y-1">
+                      <DropdownMenuItem className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-slate-800">
+                        <User className="w-4 h-4 text-slate-400" />
+                        <span>Perfil do Usuário</span>
                       </DropdownMenuItem>
-                    )}
+                      {user.role === "ADMIN" && (
+                        <DropdownMenuItem
+                          onClick={() => setIsUserModalOpen(true)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-slate-800"
+                        >
+                          <UserCog className="w-4 h-4 text-slate-400" />
+                          <span>Gerenciar Usuários</span>
+                        </DropdownMenuItem>
+                      )}
 
-                    <DropdownMenuItem className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-slate-800">
-                      <Settings className="w-4 h-4 text-slate-400" />
-                      <span>Configurações</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
+                      <DropdownMenuItem className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-slate-800">
+                        <Settings className="w-4 h-4 text-slate-400" />
+                        <span>Configurações</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
 
-                  <DropdownMenuSeparator className="my-1 bg-slate-200/80 dark:bg-slate-800" />
+                    <DropdownMenuSeparator className="my-1 bg-slate-200/80 dark:bg-slate-800" />
 
-                  {/* BOTÃO DE SAIR */}
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer text-rose-600 dark:text-rose-400 focus:bg-rose-50 dark:focus:bg-rose-950/40 focus:text-rose-600 dark:focus:text-rose-400"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sair da Conta</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {/* NOTIFICAÇÃO FIXADA NO CANTO DIREITO (NO MOBILE E DESKTOP) */}
-              <div className="right-3 top-3 sm:top-4 sm:-translate-y-0 flex items-center z-100">
-                <NotificationMenu />
+                    {/* BOTÃO DE SAIR */}
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer text-rose-600 dark:text-rose-400 focus:bg-rose-50 dark:focus:bg-rose-950/40 focus:text-rose-600 dark:focus:text-rose-400"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sair da Conta</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {/**BOTÃO DE CHAT */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/chat")}
+                    title="Crie uma nova tarefa"
+                    className="relative p-2 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer flex items-center justify-center shrink-0 transition-all duration-300 active:scale-95 hover:scale-105 rounded-xl shadow-2xs"
+                  >
+                    <MessageCircleIcon size={18} />
+                  </button>
+
+                  {totalUnread > 0 && (
+                    <span className="absolute -top-0 -right-0 bg-violet-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                      {totalUnread > 99 ? "99+" : totalUnread}
+                    </span>
+                  )}
+                </div>
+                {/*BOTÃO DE NOTIFICAÇÃO*/}
+                <div className="right-3 top-3 sm:top-4 sm:-translate-y-0 flex items-center z-100">
+                  <NotificationMenu />
+                </div>
               </div>
             </div>
           </div>

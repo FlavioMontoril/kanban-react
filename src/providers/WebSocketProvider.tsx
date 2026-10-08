@@ -24,7 +24,7 @@ interface WebSocketContextType {
 const WebSocketContext = createContext<WebSocketContextType>({
   isConnected: false,
   subscribe: () => null,
-  publish: ()=> {},
+  publish: () => {},
 });
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -39,33 +39,35 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const currentToken = Cookies.get("auth_token");
 
-    // Se deslogar, desconecta o socket existente
+    // Se deslogar ou não tiver token, garante encerramento da conexão
     if (!currentToken) {
       console.log("[WebSocketProvider] Token de autenticação não encontrado.");
       if (clientRef.current?.active) {
         clientRef.current.deactivate();
-        setIsConnected(false);
       }
+      clientRef.current = null;
+      setIsConnected(false);
       return;
     }
 
-    // Se já estiver conectado com o cliente ativo, não reconecta
+    // Se a instância já estiver ativa e conectada, reutiliza a conexão existente
     if (clientRef.current?.active && clientRef.current?.connected) {
       return;
     }
 
     console.log("[WebSocketProvider] 🔌 Iniciando conexão...");
 
-    const WS_URL= import.meta.env.VITE_WS_URL;
+    const WS_URL = import.meta.env.VITE_WS_URL;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS(WS_URL, null, {withCredentials: true} as any),
+      webSocketFactory: () =>
+        new SockJS(WS_URL, null, { withCredentials: true } as any),
 
       //Definimos o Header Authorization diretamente no objeto de configuração
       connectHeaders: {
         Authorization: `Bearer ${currentToken}`,
       },
-      
+
       // webSocketFactory: () => new SockJS(WS_URL),
 
       // beforeConnect: () => {
@@ -81,7 +83,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
       onConnect: () => {
         console.log("[WebSocketProvider] ✅ Conectado ao WebSocket via STOMP.");
-        setIsConnected(true);
+        // Força atualização no próximo tick do React para garantir que o clientRef já esteja pronto
+        setTimeout(() => {
+          setIsConnected(true);
+        }, 0);
       },
       onDisconnect: () => {
         console.log("[WebSocketProvider] ⚠️ Desconectado do WebSocket.");
@@ -106,12 +111,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     clientRef.current = client;
 
     return () => {
-     // Desativa apenas se o componente for realmente desmontado ao deslogar
-      if (!Cookies.get("auth_token")) {
+      // Se o usuário deslogar (sem token no cookie), encerra a conexão
+      if (!Cookies.get("auth_token") && clientRef.current) {
         console.log("[WebSocketProvider] 🔌 Encerrando cliente STOMP...");
-        client.deactivate();
-        setIsConnected(false);
+        clientRef.current.deactivate();
         clientRef.current = null;
+        setIsConnected(false);
       }
     };
     //Ao colocar `isAuthenticated` ou a checagem do cookie na dependência,
@@ -119,40 +124,65 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [isAuthenticated]);
 
   const publish = useCallback((destination: string, body: any) => {
-  if (!clientRef.current || !clientRef.current.connected) {
-    console.warn(
-      `[WebSocketProvider] Tentativa de envio para "${destination}" falhou: Socket desconectado.`
-    );
-    return;
-  }
+    if (!clientRef.current || !clientRef.current.connected) {
+      console.warn(
+        `[WebSocketProvider] Tentativa de envio para "${destination}" falhou: Socket desconectado.`,
+      );
+      return;
+    }
 
-  clientRef.current.publish({
-    destination,
-    body: JSON.stringify(body),
-  });
-}, []);
+    clientRef.current.publish({
+      destination,
+      body: JSON.stringify(body),
+    });
+  }, []);
 
   // Função genérica para qualquer componente se inscrever em qualquer tópico
   const subscribe = useCallback(
     (destination: string, callback: (message: any) => void) => {
-      if (!clientRef.current || !clientRef.current.connected) {
-        console.warn(
-          `[WebSocketProvider] Tentativa de inscrição em "${destination}" falhou: Socket desconectado.`,
-        );
-        return null;
-      }
+      let sub: StompSubscription | null = null;
+      let isUnsubscribed = false;
 
-      return clientRef.current.subscribe(destination, (message) => {
-        try {
-          const parsedData = JSON.parse(message.body);
-          callback(parsedData);
-        } catch (err) {
-          console.error(
-            `[WebSocketProvider] Erro ao processar mensagem do tópico ${destination}:`,
-            err,
-          );
+      const doSubscribe = () => {
+        if (isUnsubscribed) return;
+
+        // Se o cliente STOMP estiver ativo e conectado, realiza a subscrição imediatamente
+        if (clientRef.current && clientRef.current.connected) {
+          try {
+            sub = clientRef.current.subscribe(destination, (message) => {
+              try {
+                const parsedData = JSON.parse(message.body);
+                callback(parsedData);
+              } catch (err) {
+                console.error(
+                  `[WebSocketProvider] Erro ao processar mensagem do tópico ${destination}:`,
+                  err,
+                );
+              }
+            });
+          } catch (err) {
+            console.error(
+              `[WebSocketProvider] Erro ao inscrever em ${destination}:`,
+              err,
+            );
+          }
+        } else {
+          // Se ainda não estiver conectado, tenta novamente a cada 300ms até a conexão estabilizar
+          setTimeout(doSubscribe, 300);
         }
-      });
+      };
+
+      doSubscribe();
+
+      // Retorna um objeto de subscrição seguro para o cleanup do useEffect
+      return {
+        unsubscribe: () => {
+          isUnsubscribed = true;
+          if (sub && typeof sub.unsubscribe === "function") {
+            sub.unsubscribe();
+          }
+        },
+      } as StompSubscription;
     },
     [],
   );

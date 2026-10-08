@@ -13,7 +13,6 @@ import {
 } from "./ui/resizable";
 import { endOfDay, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
 import { AppHeader } from "./AppHeader";
-import { useNotificationSubscriptions } from "../hooks/useNotificationSubscriptions";
 // import { EstatisticasTasks } from "./commons/EstatisticasTasks";
 import { TaskMetrics } from "./TaskMetrics";
 import { AnimatePresence } from "framer-motion";
@@ -22,7 +21,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export function Home() {
-  useNotificationSubscriptions();
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem("app-theme") === "dark";
   });

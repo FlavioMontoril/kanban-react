@@ -8,8 +8,9 @@ import {
 import { WebSocketProvider } from "./WebSocketProvider";
 import { AuthWebSocketProvider } from "./AuthWebSocketProvider";
 import type { ReactNode } from "react";
-import { GlobalChatListener } from "./GlobalChatListener";
 import { useFloatingChatStore } from "@/store/useFloatingChatStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import { GlobalChatListener } from "./GlobalChatListener";
 
 interface IAppProviders {
   children: ReactNode;
@@ -17,27 +18,27 @@ interface IAppProviders {
 
 export function AppProviders({ children }: IAppProviders) {
   const updateRoomPosition = useFloatingChatStore(
-    (state) => state.updateRoomPosition,
+    (state) => state.updateRoomPosition
   );
 
-  // Configura a distância mínima de 5px para ativar o arraste e não interferir nos cliques simples
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 5,
       },
-    }),
+    })
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, delta } = event;
     const activeId = String(active.id);
 
-    // Se o elemento arrastado for um balão do chat flutuante
     if (activeId.startsWith("floating-bubble-")) {
       const roomId = activeId.replace("floating-bubble-", "");
+      const userId = useAuthStore.getState().user?.id;
+
       if (delta.x !== 0 || delta.y !== 0) {
-        updateRoomPosition(roomId, delta.x, delta.y);
+        updateRoomPosition(userId, roomId, delta.x, delta.y);
       }
     }
   };
