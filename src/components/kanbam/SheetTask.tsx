@@ -14,12 +14,14 @@ import { ListFilter, User, Plus } from "lucide-react";
 import { useFlowStore } from "../flow/store/useFlowStore";
 import { useTaskModalStore } from "@/store/useTaskModalStore";
 import { STATUS_CONFIG } from "./utils/task-status.config";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ITaskSheet {
   data: Task[];
 }
 
 export function SheetTask({ data }: ITaskSheet) {
+  const { users } = useAuth();
   const { openModal } = useTaskModalStore();
   const { selectedTaskId, setSelectedTaskId } = useFlowStore();
 
@@ -89,6 +91,10 @@ export function SheetTask({ data }: ITaskSheet) {
                 STATUS_CONFIG[task.status] || STATUS_CONFIG[TaskStatus.OPEN];
               const isSelected = selectedTaskId === task.id;
 
+              const reporterName =
+                users.find((u) => u.id === task?.reporterId)?.name ||
+                "Não informado";
+
               return (
                 <SheetClose key={task.id}>
                   <div
@@ -122,7 +128,7 @@ export function SheetTask({ data }: ITaskSheet) {
                       <div className="flex items-center gap-1.5">
                         <User size={13} className="text-slate-400" />
                         <span className="font-medium truncate max-w-[200px]">
-                          {task.reporter || "Não atribuído"}
+                          {reporterName || "Não atribuído"}
                         </span>
                       </div>
                     </div>

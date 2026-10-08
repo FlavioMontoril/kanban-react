@@ -2,10 +2,17 @@ import {
   ChevronRight,
   Eraser,
   LayoutGridIcon,
+  LogOut,
+  MessageCircleIcon,
   Moon,
   PackagePlus,
+  PencilSparkles,
   Search,
+  Settings,
+  Shield,
   Sun,
+  User,
+  UserCog,
 } from "lucide-react";
 import { TabsViews } from "./commons/tasbs-views";
 import { cn } from "@/lib/utils";
@@ -26,14 +33,34 @@ import type { TaskStatus } from "@/types/task";
 import { useMemo, useRef, useState } from "react";
 import { useTaskModalStore } from "@/store/useTaskModalStore";
 import { useTasks } from "@/hooks/useTasks";
+import { useAuthStore } from "@/store/useAuthStore";
+import type { UserAuthInfo } from "@/types/authentication";
+import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "./ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { UserManagementModal } from "./UserManagementModal";
+import { useAuth } from "@/hooks/useAuth";
+import { getAvatarUrl } from "@/lib/getAvatarUrl";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useChatNotificationStore } from "@/store/useChatNotificationStore";
 
 interface AppHeaderProps {
   isDarkMode: boolean;
   toggleTheme: () => void;
+  user: UserAuthInfo;
 }
 
-export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
+export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
   const { openModal } = useTaskModalStore();
+  const { logout } = useAuthStore();
+  const { users, avatarUpload } = useAuth();
   const {
     selectedStatus,
     selectedView,
@@ -45,9 +72,17 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
     setCurrentPage,
     setSelectedView,
   } = useTasks();
-
+  
+  const [isUserModalOpen, setIsUserModalOpen] = useState<boolean>(false);
   const [isBandejaAberta, setIsBandejaAberta] = useState<boolean>(false);
+  
+  const unreadByRoom = useChatNotificationStore((state) => state.unreadByRoom);
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const navigate = useNavigate();
 
   // Redireciona o scroll vertical da roda do mouse para scroll horizontal
   const handleWheelScroll = (e: React.WheelEvent<HTMLDivElement>) => {
@@ -79,184 +114,359 @@ export function AppHeader({ isDarkMode, toggleTheme }: AppHeaderProps) {
     setDateRange(undefined);
   };
 
+  const handleLogout = () => {
+    logout();
+    sessionStorage.removeItem("has-seen-splash");
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      await avatarUpload(user.id, formData);
+      toast.success("Foto do perfil atualizada!", {
+        position: "bottom-left",
+      });
+    } catch (error) {
+      console.error("Erro ao enviar o avatar:", error);
+      toast.error("Erro ao atualizar foto do perfil.");
+    } finally {
+      // Limpa o valor para permitir selecionar o mesmo arquivo novamente se necessário
+      e.target.value = "";
+    }
+  };
+
+  // Extrai as iniciais do nome do usuário para o fallback do Avatar
+  const userInitials = useMemo(() => {
+    if (!user?.name) return "US";
+    const parts = user.name.trim().split(" ");
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
+  }, [user?.name]);
+
+  const avatar = users.find((u) => u.id === user.id)?.avatar;
+  const avatarUrl = getAvatarUrl(avatar!);
+
+  const totalUnread = Object.values(unreadByRoom).reduce(
+    (acc, count) => acc + count,
+    0
+  );
+
   return (
-    <header className="relative w-full p-3 sm:p-5">
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-        {/* CONTAINER DA BANDEJA */}
-        <div
-          // onMouseEnter={() => setIsBandejaAberta(true)}
-          // onMouseLeave={() => setIsBandejaAberta(false)}
-          className="flex items-center justify-between shrink-0 w-auto min-h-[40px]"
-        >
+    <>
+      <header className="relative w-full p-3 sm:p-5">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+          {/* CONTAINER DA BANDEJA */}
           <div
-            className={cn(
-              "flex items-center p-1 rounded-2xl border bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm overflow-hidden w-full sm:w-auto justify-between",
-              "border-slate-200/80 dark:border-slate-800",
-              "transition-all duration-[1500ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
-              isBandejaAberta
-                ? "gap-1.5 sm:gap-4 h-auto sm:h-11"
-                : "gap-0 h-10 sm:h-11",
-            )}
+            // onMouseEnter={() => setIsBandejaAberta(true)}
+            // onMouseLeave={() => setIsBandejaAberta(false)}
+            className="flex items-center justify-between shrink-0 w-auto min-h-[40px]"
           >
-            {/* CAMPOS EXPANSÍVEIS INTERNOS */}
             <div
               className={cn(
-                "flex items-center transition-all duration-[1500ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
+                "flex items-center p-1 rounded-2xl border bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm overflow-hidden w-full sm:w-auto justify-between",
+                "border-slate-200/80 dark:border-slate-800",
+                "transition-all duration-[1500ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
                 isBandejaAberta
-                  ? "max-w-[calc(90vw-205px)] sm:max-w-[1250px] opacity-100 pr-1 sm:pr-2 pointer-events-auto"
-                  : "max-w-0 opacity-0 pr-0 pointer-events-none",
+                  ? "gap-1.5 sm:gap-4 h-auto sm:h-11"
+                  : "gap-0 h-10 sm:h-11",
               )}
             >
+              {/* CAMPOS EXPANSÍVEIS INTERNOS */}
               <div
-                ref={scrollContainerRef}
-                onWheel={handleWheelScroll}
-                className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto custom-scrollbar-horizontal scroll-smooth"
+                className={cn(
+                  "flex items-center transition-all duration-[1500ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
+                  isBandejaAberta
+                    ? "max-w-[calc(90vw-245px)] sm:max-w-[1250px] opacity-100 pr-1 sm:pr-2 pointer-events-auto"
+                    : "max-w-0 opacity-0 pr-0 pointer-events-none",
+                )}
               >
-                <TabsViews value={selectedView} onSelect={setSelectedView} />
-
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
-                  title={
-                    isDarkMode
-                      ? "Alternar para Modo Claro"
-                      : "Alternar para Modo Escuro"
-                  }
+                <div
+                  ref={scrollContainerRef}
+                  onWheel={handleWheelScroll}
+                  className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto custom-scrollbar-horizontal scroll-smooth"
                 >
-                  {isDarkMode ? (
-                    <Sun size={18} className="text-amber-400" />
-                  ) : (
-                    <Moon size={18} className="hover:text-black" />
-                  )}
-                </button>
+                  <TabsViews value={selectedView} onSelect={setSelectedView} />
 
-                <button
-                  type="button"
-                  onClick={() => openModal("create")}
-                  title="Crie uma nova tarefa"
-                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
-                >
-                  <PackagePlus size={18} />
-                </button>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => navigate("/chat")}
+                        title="Crie uma nova tarefa"
+                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+                      >
+                        <MessageCircleIcon size={18} />
+                      </button>
 
-                {/* 1. Busca Global */}
-                <div className="relative flex-1 min-w-[110px] sm:min-w-[200px] md:min-w-[240px]">
-                  <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="search"
-                    value={search || ""}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setCurrentPage(0);
-                    }}
-                    placeholder="Buscar..."
-                    className="h-8 sm:h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 pl-8 pr-2 text-xs outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-700 shadow-xs"
-                  />
-                </div>
+                      {totalUnread > 0 && (
+                        <span className="absolute -top-0 -right-0 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                          {totalUnread > 99 ? "99+" : totalUnread}
+                        </span>
+                      )}
+                    </div>
 
-                {/* 2. Select Status */}
-                <div className="flex items-center gap-3 shrink-0">
-                  <Select
-                    value={selectedStatus || "Todos os Status"}
-                    onValueChange={onHandleSelectStatus}
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+                    title={
+                      isDarkMode
+                        ? "Alternar para Modo Claro"
+                        : "Alternar para Modo Escuro"
+                    }
                   >
-                    <SelectTrigger className="w-28 sm:w-36 h-8 sm:h-8.5 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs shadow-xs cursor-pointer">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
+                    {isDarkMode ? (
+                      <Sun size={18} className="text-amber-400" />
+                    ) : (
+                      <Moon size={18} className="hover:text-black" />
+                    )}
+                  </button>
 
-                    <SelectContent className="rounded-xl mt-12.5">
-                      <SelectGroup>
-                        <SelectLabel className="text-[11px] text-muted-foreground">
-                          Filtro de Status
-                        </SelectLabel>
+                  <button
+                    type="button"
+                    onClick={() => openModal("create")}
+                    title="Crie uma nova tarefa"
+                    className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+                  >
+                    <PackagePlus size={18} />
+                  </button>
 
-                        <SelectItem
-                          className="cursor-pointer text-xs font-medium rounded-lg"
-                          value="Todos os Status"
-                        >
-                          Todos os Status
-                        </SelectItem>
+                  {/* 1. Busca Global */}
+                  <div className="relative flex-1 min-w-[110px] sm:min-w-[200px] md:min-w-[240px]">
+                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="search"
+                      value={search || ""}
+                      onChange={(e) => {
+                        setSearch(e.target.value);
+                        setCurrentPage(0);
+                      }}
+                      placeholder="Buscar..."
+                      className="h-8 sm:h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 pl-8 pr-2 text-xs outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-700 shadow-xs"
+                    />
+                  </div>
 
-                        {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                  {/* 2. Select Status */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Select
+                      value={selectedStatus || "Todos os Status"}
+                      onValueChange={onHandleSelectStatus}
+                    >
+                      <SelectTrigger className="w-28 sm:w-36 h-8 sm:h-8.5 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs shadow-xs cursor-pointer">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+
+                      <SelectContent className="rounded-xl mt-12.5">
+                        <SelectGroup>
+                          <SelectLabel className="text-[11px] text-muted-foreground">
+                            Filtro de Status
+                          </SelectLabel>
+
                           <SelectItem
                             className="cursor-pointer text-xs font-medium rounded-lg"
-                            key={key}
-                            value={key}
+                            value="Todos os Status"
                           >
-                            {config.label}
+                            Todos os Status
                           </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
 
-                {/* 3. DatePicker */}
-                <div className="shrink-0">
-                  <DateTasksWithRange date={dateRange} setDate={setDateRange} />
-                </div>
+                          {Object.entries(STATUS_CONFIG).map(
+                            ([key, config]) => (
+                              <SelectItem
+                                className="cursor-pointer text-xs font-medium rounded-lg"
+                                key={key}
+                                value={key}
+                              >
+                                {config.label}
+                              </SelectItem>
+                            ),
+                          )}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                {/* 4. Limpar Filtros */}
-                {totalFiltrosAtivos > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={limparFiltros}
-                    title="Limpar Filtros"
-                    className="h-8 sm:h-8.5 px-2 sm:px-2.5 gap-1.5 rounded-xl text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors shrink-0"
-                  >
-                    <Eraser className="size-3.5" />
-                  </Button>
-                )}
+                  {/* 3. DatePicker */}
+                  <div className="shrink-0">
+                    <DateTasksWithRange
+                      date={dateRange}
+                      setDate={setDateRange}
+                    />
+                  </div>
+
+                  {/* 4. Limpar Filtros */}
+                  {totalFiltrosAtivos > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={limparFiltros}
+                      title="Limpar Filtros"
+                      className="h-8 sm:h-8.5 px-2 sm:px-2.5 gap-1.5 rounded-xl text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors shrink-0"
+                    >
+                      <Eraser className="size-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <img
-              src="/logotipo-kanban.svg"
-              alt="Logo Kanbam"
-              className="h-10 sm:h-12 w-auto object-contain"
-            />
+              <img
+                src="/logotipo-kanban.svg"
+                alt="Logo Kanbam"
+                className="h-10 sm:h-12 w-auto object-contain"
+              />
 
-            {/* BOTÃO FIXO DA BANDEJA */}
-            <Button
-              variant="ghost"
-              onClick={() => setIsBandejaAberta((prev) => !prev)}
-              title="Filtros"
-              className={cn(
-                "h-8 sm:h-8.5 px-2.5 sm:px-3.5 gap-1.5 sm:gap-2 rounded-xl text-xs font-bold cursor-pointer shrink-0 transition-all duration-300 active:scale-95 hover:scale-110 ml-auto whitespace-nowrap",
-                isBandejaAberta
-                  ? "bg-slate-900 text-violet-400 hover:text-violet-900 dark:bg-slate-800 dark:text-violet-400 dark:hover:text-violet-400"
-                  : "hover:bg-transparent dark:hover:bg-slate-800/60 text-slate-700 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-400",
-              )}
-            >
-              <LayoutGridIcon
+              {/* BOTÃO FIXO DA BANDEJA */}
+              <Button
+                variant="ghost"
+                onClick={() => setIsBandejaAberta((prev) => !prev)}
+                title="Filtros"
                 className={cn(
-                  "size-4.5 opacity-60 transition-transform ",
+                  "h-8 sm:h-8.5 px-2.5 sm:px-3.5 gap-1.5 sm:gap-2 rounded-xl text-xs font-bold cursor-pointer shrink-0 transition-all duration-300 active:scale-95 hover:scale-110 ml-auto whitespace-nowrap",
                   isBandejaAberta
-                    ? "rotate-[360deg] duration-[2000ms]"
-                    : "rotate-0 duration-[2000ms]",
+                    ? "bg-slate-900 text-violet-400 hover:text-violet-900 dark:bg-slate-800 dark:text-violet-400 dark:hover:text-violet-400"
+                    : "hover:bg-transparent dark:hover:bg-slate-800/60 text-slate-700 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-400",
                 )}
-              />
-              <ChevronRight
-                className={cn(
-                  "size-3.5 opacity-60 transition-transform duration-500",
-                  isBandejaAberta ? "rotate-180" : "rotate-0",
+              >
+                <LayoutGridIcon
+                  className={cn(
+                    "size-4.5 opacity-60 transition-transform ",
+                    isBandejaAberta
+                      ? "rotate-[360deg] duration-[2000ms]"
+                      : "rotate-0 duration-[2000ms]",
+                  )}
+                />
+                <ChevronRight
+                  className={cn(
+                    "size-3.5 opacity-60 transition-transform duration-500",
+                    isBandejaAberta ? "rotate-180" : "rotate-0",
+                  )}
+                />
+                {totalFiltrosAtivos > 0 && (
+                  <span className="flex h-3.5 sm:h-4 min-w-[14px] sm:min-w-[16px] items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold px-1">
+                    {totalFiltrosAtivos}
+                  </span>
                 )}
-              />
-              {totalFiltrosAtivos > 0 && (
-                <span className="flex h-3.5 sm:h-4 min-w-[14px] sm:min-w-[16px] items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold px-1">
-                  {totalFiltrosAtivos}
-                </span>
-              )}
-            </Button>
-            {/* NOTIFICAÇÃO FIXADA NO CANTO DIREITO (NO MOBILE E DESKTOP) */}
-            <div className="right-3 top-3 sm:top-4 sm:-translate-y-0 flex items-center z-100">
-              <NotificationMenu />
+              </Button>
+
+              {/**USUARIO LOGAGO */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 hover:opacity-90 transition-opacity">
+                  <Avatar title={user.name} className="w-7 h-7">
+                    <AvatarImage src={avatarUrl!} alt={user.name} />
+                    <AvatarFallback>{userInitials}</AvatarFallback>
+                    <AvatarBadge className="bg-emerald-500 dark:bg-emerald-600" />
+                  </Avatar>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                  align="end"
+                  className="w-80 p-2 rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xl"
+                >
+                  {/* CARD SUPERIOR ESTILO GOOGLE ACCOUNTS */}
+                  <div className="group relative flex flex-col items-center justify-center p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-800/50 text-center overflow-hidden">
+                    <Avatar className="w-16 h-16 mb-3 shadow-md border-2 border-blue-600 group-hover:border-slate-400 dark:border-slate-700">
+                      <AvatarImage src={avatarUrl!} alt={user.name} />
+                      <AvatarFallback className="text-lg font-bold">
+                        {userInitials}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    {/* Input de arquivo invisível */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    {/* Botão que aciona a seleção do arquivo */}
+                    <button onClick={() => fileInputRef.current?.click()}>
+                      <div
+                        title="Editar foto do perfil"
+                        className="invisible group-hover:visible transition-transform hover:scale-105 cursor-pointer absolute left-42 bottom-38 w-6 h-6 rounded-full bg-slate-400 flex justify-center items-center"
+                      >
+                        <PencilSparkles size={15} color="white" />
+                      </div>
+                    </button>
+
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 leading-tight">
+                      {user.name}
+                    </h3>
+
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 break-all max-w-[220px]">
+                      {user.email}
+                    </p>
+
+                    <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[11px] font-semibold border border-indigo-500/20">
+                      <Shield className="w-3 h-3" />
+                      <span>{user.role}</span>
+                    </div>
+
+                    {/* BOTÃO PRINCIPAL DE AÇÃO ESTILO GOOGLE */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white border-none shadow-md font-semibold text-xs h-8 cursor-pointer active:scale-[0.98] transition-all"
+                    >
+                      Gerenciar Conta
+                    </Button>
+                  </div>
+
+                  {/* GRUPO DE OPÇÕES */}
+                  <DropdownMenuGroup className="mt-2 space-y-1">
+                    <DropdownMenuItem className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-slate-800">
+                      <User className="w-4 h-4 text-slate-400" />
+                      <span>Perfil do Usuário</span>
+                    </DropdownMenuItem>
+                    {user.role === "ADMIN" && (
+                      <DropdownMenuItem
+                        onClick={() => setIsUserModalOpen(true)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-slate-800"
+                      >
+                        <UserCog className="w-4 h-4 text-slate-400" />
+                        <span>Gerenciar Usuários</span>
+                      </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuItem className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-slate-800">
+                      <Settings className="w-4 h-4 text-slate-400" />
+                      <span>Configurações</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+
+                  <DropdownMenuSeparator className="my-1 bg-slate-200/80 dark:bg-slate-800" />
+
+                  {/* BOTÃO DE SAIR */}
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer text-rose-600 dark:text-rose-400 focus:bg-rose-50 dark:focus:bg-rose-950/40 focus:text-rose-600 dark:focus:text-rose-400"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sair da Conta</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {/* NOTIFICAÇÃO FIXADA NO CANTO DIREITO (NO MOBILE E DESKTOP) */}
+              <div className="right-3 top-3 sm:top-4 sm:-translate-y-0 flex items-center z-100">
+                <NotificationMenu />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* 4. COMPONENTE MODAL RENDERIZADO COM ESTADO */}
+      <UserManagementModal
+        isOpen={isUserModalOpen}
+        onClose={() => setIsUserModalOpen(false)}
+      />
+    </>
   );
 }

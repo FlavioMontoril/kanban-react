@@ -5,12 +5,20 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "../ui/hover-card";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TaskHoverCardProps {
   task: Task;
 }
 
 export function TaskHoverCard({ task }: TaskHoverCardProps) {
+  const { users } = useAuth();
+
+  const reporterName =
+    users.find((u) => u.id === task.reporterId)?.name || "Não informado";
+  const assigneeName =
+    users.find((u) => u.id === task.userId)?.name || "Não atribuído";
+
   return (
     <HoverCard delay={200} closeDelay={100}>
       <HoverCardTrigger
@@ -61,7 +69,7 @@ export function TaskHoverCard({ task }: TaskHoverCardProps) {
                 Relator
               </p>
               <p className="font-medium text-slate-700 dark:text-slate-300">
-                {task.reporter || "Não informado"}
+                {reporterName || "Não informado"}
               </p>
             </div>
 
@@ -70,7 +78,7 @@ export function TaskHoverCard({ task }: TaskHoverCardProps) {
                 Responsável
               </p>
               <p className="font-medium text-slate-700 dark:text-slate-300">
-                {task.assignee || "Não atribuído"}
+                {assigneeName || "Não atribuído"}
               </p>
             </div>
           </div>
