@@ -166,11 +166,11 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
           <div
             // onMouseEnter={() => setIsBandejaAberta(true)}
             // onMouseLeave={() => setIsBandejaAberta(false)}
-            className="flex items-center justify-between shrink-0 w-auto min-h-[40px]"
+            className="flex items-center justify-between shrink-0 w-auto min-h-[40px] max-w-full"
           >
             <div
               className={cn(
-                "flex items-center p-1 rounded-2xl border bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm overflow-hidden w-full sm:w-auto justify-between",
+                "flex items-center p-1 rounded-2xl border bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm w-full sm:w-auto justify-between max-w-full",
                 "border-slate-200/80 dark:border-slate-800",
                 "transition-all duration-[1500ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
                 isBandejaAberta
@@ -181,9 +181,9 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
               {/* CAMPOS EXPANSÍVEIS INTERNOS */}
               <div
                 className={cn(
-                  "flex items-center transition-all duration-[1500ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
+                  "flex items-center transition-all duration-[1500ms] ease-[cubic-bezier(0.16,1,0.3,1)] min-w-0",
                   isBandejaAberta
-                    ? "max-w-[calc(90vw-245px)] sm:max-w-[1250px] opacity-100 pr-1 sm:pr-2 pointer-events-auto"
+                    ? "max-w-[calc(90vw-245px)] max-w-40 md:max-w-[550px] lg:max-w-[1250px] opacity-100 pr-1 sm:pr-2 pointer-events-auto"
                     : "max-w-0 opacity-0 pr-0 pointer-events-none",
                 )}
               >
@@ -304,7 +304,7 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
               />
 
               {/* BOTÃO FIXO DA BANDEJA */}
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 shrink-0">
               <Button
                 variant="ghost"
                 onClick={() => setIsBandejaAberta((prev) => !prev)}
@@ -442,9 +442,9 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                     type="button"
                     onClick={() => navigate("/chat")}
                     title="Crie uma nova tarefa"
-                    className="relative p-2 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer flex items-center justify-center shrink-0 transition-all duration-300 active:scale-95 hover:scale-105 rounded-xl shadow-2xs"
+                    className="relative p-2 dark:border-slate-800 dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer flex items-center justify-center shrink-0 transition-all duration-300 active:scale-95 hover:scale-110"
                   >
-                    <MessageCircleIcon size={18} />
+                    <MessageCircleIcon size={20} />
                   </button>
 
                   {totalUnread > 0 && (
@@ -454,7 +454,7 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                   )}
                 </div>
                 {/*BOTÃO DE NOTIFICAÇÃO*/}
-                <div className="right-3 top-3 sm:top-4 sm:-translate-y-0 flex items-center z-100">
+                <div className="flex items-center justify-center shrink-0">
                   <NotificationMenu />
                 </div>
               </div>

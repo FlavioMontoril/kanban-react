@@ -118,12 +118,12 @@ export function NotificationMenu() {
           e.stopPropagation();
           handleToggle();
         }}
-        className="relative p-2 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer flex items-center justify-center shrink-0 transition-all duration-300 active:scale-95 hover:scale-105 rounded-xl shadow-2xs"
+        className="relative p-2 dark:border-slate-800  dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer flex items-center justify-center shrink-0 transition-all duration-300 active:scale-95 hover:scale-110"
         title="Notificações"
       >
-        <Bell size={18} />
+        <Bell size={20} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse px-1 shadow-xs">
+          <span className="absolute -top-0 -right-0 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse px-1.5 py-0.5 shadow-xs">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}

@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { useChat } from "@/hooks/useChat";
 import { useAuthStore } from "@/store/useAuthStore";
 import { ChatType, type ChatRoom } from "@/types/chat-types";
-import { useUserStore } from "@/store/useUserStore";
 import {
   SquareArrowRightExit,
   X,
@@ -18,6 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getAvatarUrl } from "@/lib/getAvatarUrl";
 import { useChatNotificationStore } from "@/store/useChatNotificationStore";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ChatPage() {
   const {
@@ -31,7 +31,7 @@ export default function ChatPage() {
     createRoom,
   } = useChat();
   const { user } = useAuthStore();
-  const { users } = useUserStore();
+  const { users, fetchUsers } = useAuth();
 
   // Integrated unread messages store
   const { unreadByRoom, clearUnreadForRoom } = useChatNotificationStore();
@@ -47,6 +47,11 @@ export default function ChatPage() {
 
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
+
+  useEffect(()=> {
+    if(!users) return;
+    fetchUsers();
+  }, [fetchUsers])
 
   // Auto-scroll para a última mensagem
   useEffect(() => {
