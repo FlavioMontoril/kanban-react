@@ -9,6 +9,9 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    watch: {
+      usePolling: true,
+    },
   },
   define: {
     // 🎯 Resolve o problema do SockJS procurando o objeto 'global'

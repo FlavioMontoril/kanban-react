@@ -10,6 +10,7 @@ import { useTasks } from "@/hooks/useTasks";
 import { AssigneeSelect } from "../commons/AssigneeSelect";
 import type { UserResponse } from "@/types/user";
 import { STATUS_CONFIG } from "@/components/kanbam/utils/task-status.config";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -27,13 +28,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   onClose,
 }) => {
   const { createTask, moveTaskStatus } = useTasks();
+  const {user} = useAuthStore()
 
   const [formData, setFormData] = useState<TaskRequestDTO>({
     code: "",
     title: "",
     description: "",
-    reporter: "",
-    assignee: "",
+    reporterId: "",
     userId: "",
   });
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
@@ -45,8 +46,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           code: task.code,
           title: task.title,
           description: task.description,
-          reporter: task.reporter,
-          assignee: task.assignee || "",
+          reporterId: task.reporterId || user?.id || "",
           userId: task.userId || "",
         });
         setSelectedStatus(null);
@@ -55,8 +55,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           code: "",
           title: "",
           description: "",
-          reporter: "",
-          assignee: "",
+          reporterId: user?.id || "",
           userId: "",
         });
       }
@@ -173,12 +172,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   <input
                     type="text"
                     required
-                    disabled={isReadOnly}
-                    value={formData.reporter}
+                    disabled={isReadOnly || Boolean(user?.name)}
+                    value={user?.name}
                     placeholder="Nome do relator"
-                    onChange={(e) =>
-                      setFormData({ ...formData, reporter: e.target.value })
-                    }
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-medium focus:outline-hidden focus:border-violet-500 transition-colors disabled:opacity-60"
                   />
                 </div>

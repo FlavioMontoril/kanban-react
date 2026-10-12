@@ -14,6 +14,7 @@ import { useTasks } from "@/hooks/useTasks";
 import { useFlowStore } from "../flow/store/useFlowStore";
 import { TaskDropdownMenu } from "../commons/TaskDropdownMenuCard";
 import { useTaskModalStore } from "@/store/useTaskModalStore";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ITaskTable {
   data: Task[];
@@ -23,6 +24,7 @@ export function TableTask({ data }: ITaskTable) {
   const { pageData, currentPage, size, loading, setCurrentPage } = useTasks();
   const { selectedTaskId, setSelectedTaskId } = useFlowStore();
   const { openModal } = useTaskModalStore();
+  const { users } = useAuth();
 
   const [task, setTask] = useState<Task | null>(null);
 
@@ -91,6 +93,10 @@ export function TableTask({ data }: ITaskTable) {
                       STATUS_CONFIG[task.status] ||
                       STATUS_CONFIG[TaskStatus.OPEN];
 
+                    const reporterName =
+                      users.find((u) => u.id === task.reporterId)?.name ||
+                      "Não informado";
+
                     return (
                       <TableRow
                         key={task.id}
@@ -120,10 +126,10 @@ export function TableTask({ data }: ITaskTable) {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[10px] flex items-center justify-center uppercase">
-                              {(task.reporter || "U").slice(0, 2)}
+                              {(reporterName || "U").slice(0, 2)}
                             </div>
                             <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">
-                              {task.reporter || "Não atribuído"}
+                              {reporterName || "Não atribuído"}
                             </span>
                           </div>
                         </TableCell>

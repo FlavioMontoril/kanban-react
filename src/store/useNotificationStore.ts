@@ -1,13 +1,15 @@
 import type { Task } from "@/types/task";
+import type { UserPresenceDTO } from "@/types/user";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-export type NotificationType = "CREATED" | "ARCHIVED" | "STATUS_CHANGED";
+export type NotificationType = "CREATED" | "ARCHIVED" | "STATUS_CHANGED" | "CONNECTION";
 
 export interface AppNotification {
   id: string;
   type: NotificationType;
-  task: Task;
+  task?: Task;
+  user?: UserPresenceDTO;
   createdAt: string;
   read: boolean;
 }
@@ -16,6 +18,7 @@ interface NotificationState {
   notifications: AppNotification[];
   addNotification: (task: Task, type: NotificationType) => void;
   addNotifications: (newTasks: Task[], type: NotificationType) => void;
+  addPresenceNotification: (serPresence: UserPresenceDTO, type: NotificationType) => void;
   removeNotification: (notificationId: string) => void;
   markAsRead: (notificationId: string) => void;
   clearAll: () => void;
@@ -25,6 +28,22 @@ export const useNotificationStore = create<NotificationState>()(
   persist(
     (set) => ({
       notifications: [],
+
+      // Aceita o DTO completo recebido do backend
+addPresenceNotification: (userPresence, type) =>
+  set((state) => {
+    const newNotification: AppNotification = {
+      id: `user-${userPresence.id}-${type}-${Date.now()}`,
+      type,
+      user: userPresence,
+      createdAt: new Date().toISOString(),
+      read: false,
+    };
+
+    return {
+      notifications: [newNotification, ...state.notifications],
+    };
+  }),
 
       // Adiciona uma única notificação
       addNotification: (task, type) =>
