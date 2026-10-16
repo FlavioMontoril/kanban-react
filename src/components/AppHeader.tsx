@@ -14,7 +14,6 @@ import {
   User,
   UserCog,
 } from "lucide-react";
-import { TabsViews } from "./commons/tasbs-views";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -50,6 +49,7 @@ import { getAvatarUrl } from "@/lib/getAvatarUrl";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useChatNotificationStore } from "@/store/useChatNotificationStore";
+import { SelectViewMode } from "./commons/SelectViewMode";
 
 interface AppHeaderProps {
   isDarkMode: boolean;
@@ -192,7 +192,10 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                   onWheel={handleWheelScroll}
                   className="flex items-center gap-1.5 sm:gap-2.5 pl-0.5 py-0.5 w-full overflow-x-auto custom-scrollbar-horizontal scroll-smooth"
                 >
-                  <TabsViews value={selectedView} onSelect={setSelectedView} />
+                  <SelectViewMode
+                    value={selectedView}
+                    onSelect={setSelectedView}
+                  />
 
                   <button
                     type="button"
@@ -305,37 +308,37 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
 
               {/* BOTÃO FIXO DA BANDEJA */}
               <div className="flex items-center gap-2 shrink-0">
-              <Button
-                variant="ghost"
-                onClick={() => setIsBandejaAberta((prev) => !prev)}
-                title="Filtros"
-                className={cn(
-                  "h-8 sm:h-8.5 px-2.5 sm:px-3.5 gap-1.5 sm:gap-2 rounded-xl text-xs font-bold cursor-pointer shrink-0 transition-all duration-300 active:scale-95 hover:scale-110 ml-auto whitespace-nowrap",
-                  isBandejaAberta
-                    ? "bg-slate-900 text-violet-400 hover:text-violet-900 dark:bg-slate-800 dark:text-violet-400 dark:hover:text-violet-400"
-                    : "hover:bg-transparent dark:hover:bg-slate-800/60 text-slate-700 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-400",
-                )}
-              >
-                <LayoutGridIcon
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsBandejaAberta((prev) => !prev)}
+                  title="Filtros"
                   className={cn(
-                    "size-4.5 opacity-60 transition-transform ",
+                    "h-8 sm:h-8.5 px-2.5 sm:px-3.5 gap-1.5 sm:gap-2 rounded-xl text-xs font-bold cursor-pointer shrink-0 transition-all duration-300 active:scale-95 hover:scale-110 ml-auto whitespace-nowrap",
                     isBandejaAberta
-                      ? "rotate-[360deg] duration-[2000ms]"
-                      : "rotate-0 duration-[2000ms]",
+                      ? "bg-slate-900 text-violet-400 hover:text-violet-900 dark:bg-slate-800 dark:text-violet-400 dark:hover:text-violet-400"
+                      : "hover:bg-transparent dark:hover:bg-slate-800/60 text-slate-700 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-400",
                   )}
-                />
-                <ChevronRight
-                  className={cn(
-                    "size-3.5 opacity-60 transition-transform duration-500",
-                    isBandejaAberta ? "rotate-180" : "rotate-0",
+                >
+                  <LayoutGridIcon
+                    className={cn(
+                      "size-4.5 opacity-60 transition-transform ",
+                      isBandejaAberta
+                        ? "rotate-[360deg] duration-[2000ms]"
+                        : "rotate-0 duration-[2000ms]",
+                    )}
+                  />
+                  <ChevronRight
+                    className={cn(
+                      "size-3.5 opacity-60 transition-transform duration-500",
+                      isBandejaAberta ? "rotate-180" : "rotate-0",
+                    )}
+                  />
+                  {totalFiltrosAtivos > 0 && (
+                    <span className="flex h-3.5 sm:h-4 min-w-[14px] sm:min-w-[16px] items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold px-1">
+                      {totalFiltrosAtivos}
+                    </span>
                   )}
-                />
-                {totalFiltrosAtivos > 0 && (
-                  <span className="flex h-3.5 sm:h-4 min-w-[14px] sm:min-w-[16px] items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold px-1">
-                    {totalFiltrosAtivos}
-                  </span>
-                )}
-              </Button>
+                </Button>
                 {/**USUARIO LOGAGO */}
                 <DropdownMenu>
                   <DropdownMenuTrigger className="rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 hover:opacity-90 transition-opacity">

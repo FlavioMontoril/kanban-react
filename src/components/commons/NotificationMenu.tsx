@@ -21,6 +21,8 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getAvatarUrl } from "@/lib/getAvatarUrl";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useFlowStore } from "../flow/store/useFlowStore";
+import { useTasks } from "@/hooks/useTasks";
 
 const eventDetails: Record<
   NotificationType,
@@ -68,10 +70,14 @@ export function NotificationMenu() {
     top: 0,
     left: 0,
   });
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
+  const { selectedView, setSelectedView } = useTasks();
+  const { setSelectedTaskId } = useFlowStore();
   const { notifications, markAsRead, removeNotification, clearAll } =
     useNotificationStore();
+
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const filteredNotifications = notifications.filter((item) => {
@@ -98,6 +104,15 @@ export function NotificationMenu() {
     }
     setIsOpen((prev) => !prev);
   };
+
+  function handleSelectAction(id: string, taskId: string) {
+    markAsRead(id);
+    if (taskId && selectedView === "flow") {
+      setSelectedTaskId(taskId);
+      setSelectedView("flow");
+      // setIsOpen(false); // Fecha o menu de notificações após clicar
+    }
+  }
 
   const userName = notifications.map((item) => item.user?.name)?.[0];
   const userInitials = useMemo(() => {
@@ -226,7 +241,9 @@ export function NotificationMenu() {
                     return (
                       <div
                         key={item?.id}
-                        onClick={() => markAsRead(item?.id)}
+                        onClick={() =>
+                          handleSelectAction(item?.id, item?.task?.id!)
+                        }
                         className={`group relative p-3.5 rounded-2xl border transition cursor-pointer ${
                           item?.read
                             ? "border-slate-100 dark:border-slate-800/40 bg-slate-50/30 dark:bg-slate-900/40 opacity-60 hover:opacity-100"

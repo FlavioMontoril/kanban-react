@@ -1,12 +1,5 @@
 import { Handle, Position, type NodeProps, type Node } from "@xyflow/react";
-import {
-  Trash2,
-  User,
-  Info,
-  History,
-  FolderKanban,
-  Calendar,
-} from "lucide-react";
+import { User, Info, History, FolderKanban, Calendar, X } from "lucide-react";
 import { useFlowStore } from "../store/useFlowStore";
 import { TaskStatus, type Task } from "@/types/task";
 import { memo } from "react";
@@ -133,9 +126,8 @@ function Square({ data, id }: NodeProps<Node<SquareNodeData>>) {
                 deleteSquareNode(id);
               }}
               className="text-white/70 hover:text-rose-200 hover:bg-rose-500/20 p-1 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
-              title="Fechar tarefa"
             >
-              <Trash2 size={14} />
+              <X size={14} />
             </button>
           </div>
         </div>

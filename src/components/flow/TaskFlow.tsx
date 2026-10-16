@@ -11,7 +11,7 @@ import "@xyflow/react/dist/style.css";
 
 import { useFlowStore } from "./store/useFlowStore";
 import colors from "tailwindcss/colors";
-import { MousePointerClick, Workflow } from "lucide-react";
+import { AlertCircle, MousePointerClick, Workflow } from "lucide-react";
 import { DetailsSquareComponents } from "./nodes/DetailsSquare";
 import { SquareComponent } from "./nodes/Square";
 import { HistorySquareComponents } from "./nodes/HistorySquare";
@@ -103,8 +103,20 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
 
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300">
             <MousePointerClick size={14} className="text-violet-500" />
-            <span>Use o botão no canto superior direito</span>
+            <span>Use o botão no canto inferior</span>
           </div>
+        </div>
+      )}
+
+      {selectedTaskId && !data && (
+        <div className="absolute z-10 flex flex-col items-center justify-center p-8 text-center max-w-sm rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-xl transition-all">
+          <div className="p-3 bg-violet-50 dark:bg-violet-950/50 rounded-2xl text-violet-600 dark:text-violet-400 mb-4 border border-violet-200/50 dark:border-violet-800/50">
+            <AlertCircle size={32} />
+          </div>
+
+          <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100">
+            Tarefa selecionada foi arquivada ou deletada!
+          </h3>
         </div>
       )}
       <ReactFlow

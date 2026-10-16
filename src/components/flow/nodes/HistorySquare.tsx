@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef } from "react";
 import { Handle, Position, type NodeProps, type Node } from "@xyflow/react";
-import { Trash2, History, ArrowRight } from "lucide-react";
+import { History, ArrowRight, X } from "lucide-react";
 import { useFlowStore } from "../store/useFlowStore";
 import type { SquareNodeData } from "./Square";
 import { useTaskHistoryStore } from "@/store/useTaskHistories";
@@ -67,9 +67,8 @@ function HistorySquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
               deleteSquareNode(id);
             }}
             className="text-white/80 hover:text-white hover:bg-amber-600/60 p-1 rounded-md transition-colors cursor-pointer border-none bg-transparent"
-            title="Apagar nó de histórico"
           >
-            <Trash2 size={14} />
+            <X size={14} />
           </button>
         </div>
 

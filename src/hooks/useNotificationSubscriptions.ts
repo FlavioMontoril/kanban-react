@@ -2,9 +2,7 @@ import { useEffect } from "react";
 import { useWebSocket } from "@/providers/WebSocketProvider"; // Ajuste o caminho do seu Provider
 import { useTaskStore } from "@/store/useTaskStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
-import { toast } from "sonner";
 import type {
-  Task,
   TaskChangeArchivedPayload,
   TaskChangeStatusPayload,
   TaskCreatedEventPayload,
@@ -37,7 +35,7 @@ export function useNotificationSubscriptions() {
 
     // 1. Escuta a criação de tarefas
     const createSub = subscribe(
-      "/topic/task-created",
+      "/user/queue/task-created",
       (payload: TaskCreatedEventPayload) => {
         console.log("[WEBSOCKET] Tarefa criada recebida:", payload);
 
@@ -57,38 +55,17 @@ export function useNotificationSubscriptions() {
 
     // 2. Escuta o arquivamento de tarefas
     const archiveSub = subscribe(
-      "/topic/tasks-archived",
+      "/user/queue/tasks-archived",
       (payload: TaskChangeArchivedPayload) => {
         console.log("[WEBSOCKET] Tarefas arquivadas recebidas:", payload);
 
-        const { archivedTasks, triggeredId } = payload;
+        const { archivedTasks } = payload;
 
-        if (!archivedTasks || archivedTasks.length === 0) return;
-
-        const archivedIds = archivedTasks.map((t) => t.id);
+        const archivedIds = archivedTasks.map((task) => task.id);
         removeTasksLocal(archivedIds);
         addNotifications(archivedTasks, "ARCHIVED");
 
-        // Verifica se a ação foi acionada pelo usuário logado
-        // Como o arquivamento vem do @Scheduled do backend, triggeredId será null, logo isActionMadeByMe será false
-        const isActionMadeByMe = Boolean(
-          triggeredId && triggeredId === user?.id,
-        );
-
-        if (!isActionMadeByMe) {
-          // toast.info(
-          //   `${archivedTasks.length} tarefa(s) foram arquivadas pelo sistema.`,
-          // );
-          // Exibe o toast apenas para o participante que NÃO executou o arquivamento.
-          archivedTasks.forEach((task) => {
-            const currentUserIsAssignee = task.userId === user?.id;
-            const currentUserIsReporter = task.reporterId === user?.id;
-
-            if (!currentUserIsAssignee || !currentUserIsReporter) {
-              showTaskAssigneeToast({ task, type: "ARCHIVED" });
-            }
-          });
-        }
+        showTaskAssigneeToast({ task: archivedTasks[0], type: "ARCHIVED" });
       },
     );
 

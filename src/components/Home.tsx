@@ -3,22 +3,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useTasks } from "../hooks/useTasks";
 import { TaskModal } from "./kanbam/TaskModal";
 import { useTaskModalStore } from "../store/useTaskModalStore";
-import { TableTask } from "./kanbam/TaskTable";
 import { TaskFlow } from "./flow/TaskFlow";
 import { useFlowStore } from "./flow/store/useFlowStore";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "./ui/resizable";
 import { endOfDay, isAfter, isBefore, parseISO, startOfDay } from "date-fns";
 import { AppHeader } from "./AppHeader";
-// import { EstatisticasTasks } from "./commons/EstatisticasTasks";
-import { TaskMetrics } from "./TaskMetrics";
 import { AnimatePresence } from "framer-motion";
 import { SplashScreen } from "./commons/SplashScreen";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/useAuthStore";
+import { TaskSidebarList } from "./TaskSidebarList";
+import { PanelLeft } from "lucide-react";
 
 export function Home() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -27,6 +21,8 @@ export function Home() {
   const [showSplash, setShowSplash] = useState<boolean>(() => {
     return !sessionStorage.getItem("has-seen-splash");
   });
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   const toggleTheme = () => {
     setIsDarkMode((prev) => {
@@ -158,31 +154,49 @@ export function Home() {
           )} */}
           <main className="flex-1 min-h-0 overflow-hidden">
             {selectedView === "kanban" && <KanbanBoard tasks={filtrados} />}
-            {selectedView === "Workflows" && (
-              <ResizablePanelGroup
-                key={selectedTaskId ? "split-mode" : "full-mode"}
-                orientation="horizontal"
-                className="min-h-[200px] w-full"
-              >
-                <ResizablePanel
-                  defaultSize={selectedTaskId ? 30 : 100}
-                  minSize={290}
-                >
-                  <TableTask data={dataTasks} />
-                </ResizablePanel>
-                {selectedTaskId && (
-                  <>
-                    <ResizableHandle withHandle />
-                    <ResizablePanel defaultSize="70%">
-                      <TaskFlow
-                        data={tasks.find((t) => t.id === selectedTaskId)}
+            {selectedView === "flow" && (
+              <div className="w-full h-full relative overflow-hidden flex-1 min-h-0 flex flex-col">
+                {/* 1. Canvas do React Flow Ocupando a Tela inteira em segundo plano */}
+                <div className="w-full h-full flex-1">
+                  <TaskFlow
+                    data={tasks.find((t) => t.id === selectedTaskId)}
+                    isDarkMode={isDarkMode}
+                  />
+                </div>
+
+                {/* 2. Drawer / Bottom Sheet Retrátil na Parte Inferior */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-[95%] max-w-350 transition-all duration-300 ease-in-out">
+                  {isSidebarCollapsed ? (
+                    /* Botão / Pílula Flutuante para Reabrir quando Recolhido */
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setIsSidebarCollapsed(false)}
+                        className="p-3 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 rounded-full shadow-2xl text-slate-700 dark:text-slate-200 hover:text-violet-600 dark:hover:text-violet-400 hover:scale-105 transition-all flex items-center gap-2.5 text-xs font-bold cursor-pointer"
+                      >
+                        <PanelLeft
+                          size={18}
+                          className="text-violet-600 dark:text-violet-400 rotate-90"
+                        />
+                        <span>Abrir Painel de Tarefas</span>
+                        <span className="text-[10px] bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded-full font-extrabold">
+                          {filtrados.length}
+                        </span>
+                      </button>
+                    </div>
+                  ) : (
+                    /* Container do Bottom Sheet */
+                    <div className="bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden transition-all flex flex-col max-h-[320px]">
+                      <TaskSidebarList
+                        data={filtrados}
+                        // isCollapsed={isSidebarCollapsed}
+                        onToggleCollapse={() => setIsSidebarCollapsed(true)}
                       />
-                    </ResizablePanel>
-                  </>
-                )}
-              </ResizablePanelGroup>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
-            {selectedView === "metrics" && <TaskMetrics />}
           </main>
         </div>
 
