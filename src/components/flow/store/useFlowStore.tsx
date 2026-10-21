@@ -112,7 +112,9 @@ export const useFlowStore = create<FlowState>()(
         //   (edge) => edge.source === parentId,
         // ).length;
 
-        const childId = crypto.randomUUID();
+        // A API nativa crypto.randomUUID() só é disponibilizada pelo navegador em Ambientes Seguros (HTTPS) ou em localhost, em (HTTP) quebra.
+        // const childId = crypto.randomUUID();
+        const childId = `${nodeType}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const parentTask = parentNode.data?.task;
 
         const isLeftNode = nodeType === "historySquare";

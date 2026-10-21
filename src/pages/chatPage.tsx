@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useChat } from "@/hooks/useChat";
 import { useAuthStore } from "@/store/useAuthStore";
 import { ChatType, type ChatRoom } from "@/types/chat-types";
@@ -12,6 +12,8 @@ import {
   Users,
   Check,
   MessagesCircle,
+  ArrowLeft,
+  Smile,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getAvatarUrl } from "@/lib/getAvatarUrl";
@@ -22,8 +24,9 @@ import { renderFormattedMessage } from "@/lib/renderFormattedMessage";
 import { toast } from "sonner";
 import type { Task } from "@/types/task";
 import { TaskDetailsModal } from "@/components/commons/TaskDetailsModal";
-import EmojiPicker, { Theme, type EmojiClickData } from "emoji-picker-react";
-import { Smile } from "lucide-react";
+import type { EmojiClickData, Theme } from "emoji-picker-react";
+
+const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
 export default function ChatPage() {
   const {
@@ -40,7 +43,6 @@ export default function ChatPage() {
   const { users, fetchUsers } = useAuth();
   const { tasks } = useTaskStore();
 
-  // Integrated unread messages store
   const { unreadByRoom, clearUnreadForRoom } = useChatNotificationStore();
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -49,14 +51,11 @@ export default function ChatPage() {
   const [messageInput, setMessageInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Estados locais do Modal de Nova Conversa / Grupo
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isGroupMode, setIsGroupMode] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  // Estados para o Autocomplete de Tarefas (#)
   const [showTaskSuggestions, setShowTaskSuggestions] = useState(false);
   const [taskSearchQuery, setTaskSearchQuery] = useState("");
 
@@ -65,22 +64,13 @@ export default function ChatPage() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (selectedUserIds.length > 1) {
-      setIsGroupMode(true);
-    } else {
-      setIsGroupMode(false);
-    }
-  }, [selectedUserIds]);
+  const isGroupMode = selectedUserIds.length > 1;
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    // Reseta a altura para calcular o scrollHeight correto ao apagar texto
     textarea.style.height = "auto";
-
-    // Define a nova altura com base no conteúdo (limitando se desejar ou deixando livre)
     textarea.style.height = `${textarea.scrollHeight}px`;
   };
 
@@ -89,14 +79,11 @@ export default function ChatPage() {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Auto-scroll para a última mensagem
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Ação disparada ao clicar na badge #ID dentro de uma mensagem recebida/enviada
   const handleOpenTaskDetails = (taskId: string) => {
-    // Compara unicamente pelo ID da tarefa
     const foundTask = tasks.find((t) => t.id === taskId);
 
     if (foundTask) {
@@ -113,16 +100,13 @@ export default function ChatPage() {
     const value = e.target.value;
     setMessageInput(value);
 
-    // Ajusta a altura do imput de mensagem dinamicamente
     adjustTextareaHeight();
 
-    // Identifica a última ocorrência do caractere '#'
     const lastHashIndex = value.lastIndexOf("#");
 
     if (lastHashIndex !== -1 && lastHashIndex >= value.length - 15) {
       const query = value.slice(lastHashIndex + 1);
 
-      // Se não houver espaço depois do '#', consideramos que o usuário está buscando uma tarefa
       if (!query.includes(" ")) {
         setTaskSearchQuery(query.toLowerCase());
         setShowTaskSuggestions(true);
@@ -133,22 +117,12 @@ export default function ChatPage() {
     setShowTaskSuggestions(false);
   };
 
-  // Ao clicar em uma sugestão do menu suspenso
-  // const handleSelectTaskSuggestion = (taskId: string | number) => {
-  //   const lastHashIndex = messageInput.lastIndexOf("#");
-  //   const newText = messageInput.slice(0, lastHashIndex) + `#${taskId} `;
-  //   setMessageInput(newText);
-  //   setShowTaskSuggestions(false);
-  // };
-
-  // Handler para selecionar a sala e zerar as mensagens não lidas dela
   const handleSelectRoom = (room: ChatRoom) => {
     setActiveRoom(room);
     clearUnreadForRoom(room.id);
     clearUnreadForRoom(String(room.id));
   };
 
-  // Busca EXCLUSIVAMENTE na useUserStore() sem misturar com useAuthStore
   const getUserFromUserStore = (userId?: string | number) => {
     if (!userId) return null;
     return users.find((u) => String(u.id) === String(userId)) || null;
@@ -164,7 +138,6 @@ export default function ChatPage() {
 
     setShowEmojiPicker(false);
 
-    // Reseta a altura do textarea para 1 linha
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
@@ -173,15 +146,11 @@ export default function ChatPage() {
   const handleCreateRoom = async () => {
     if (selectedUserIds.length === 0) return;
 
-    const targetUserIds = isGroupMode
-      ? selectedUserIds
-      : selectedUserIds.filter((id) => id !== user?.id);
-
     try {
       const room = await createRoom({
         name: isGroupMode ? groupName : undefined,
         type: isGroupMode ? "GROUP" : "DIRECT",
-        targetUserIds: targetUserIds,
+        targetUserIds: selectedUserIds,
       });
 
       setIsModalOpen(false);
@@ -196,7 +165,6 @@ export default function ChatPage() {
     }
   };
 
-  // Nome exibido na sala buscando direto no useUserStore
   const getRoomDisplayName = (room: ChatRoom) => {
     const isGroupRoom = room.type === ChatType.GROUP;
 
@@ -218,7 +186,6 @@ export default function ChatPage() {
       : "Conversa Direta";
   };
 
-  // URL do avatar da sala acessando estritamente useUserStore
   const getRoomAvatar = (room: ChatRoom) => {
     if (room.type === ChatType.GROUP) return null;
 
@@ -233,7 +200,6 @@ export default function ChatPage() {
     getRoomDisplayName(room).toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // 1. Filtra as mensagens atreladas exclusivamente à sala selecionada
   const activeRoomMessages = messages.filter(
     (msg) => msg.roomId === activeRoom?.id,
   );
@@ -244,11 +210,16 @@ export default function ChatPage() {
 
   return (
     <>
-      <div className="flex h-screen w-full bg-slate-50 dark:bg-zinc-950 overflow-hidden font-sans text-slate-800 dark:text-zinc-100">
+      {/* Container Raiz Principal - Restringe totalmente a largura no celular */}
+      <div className="flex h-[100dvh] w-full max-w-full bg-slate-50 dark:bg-zinc-950 overflow-hidden font-sans text-slate-800 dark:text-zinc-100 fixed inset-0">
         {/* SIDEBAR DE CONVERSAS */}
-        <aside className="w-80 md:w-96 border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col shrink-0">
+        <aside
+          className={`${
+            activeRoom ? "hidden md:flex" : "flex"
+          } w-full md:w-80 lg:w-96 border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex-col shrink-0 h-full overflow-hidden`}
+        >
           {/* Topo da Sidebar */}
-          <div className="p-4 border-b border-slate-100 dark:border-zinc-800/80 flex justify-between items-center bg-white/50 dark:bg-zinc-900/50 backdrop-blur">
+          <div className="p-4 border-b border-slate-100 dark:border-zinc-800/80 flex justify-between items-center bg-white/50 dark:bg-zinc-900/50 backdrop-blur shrink-0">
             <div className="flex items-center gap-2.5">
               <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                 Mensagens
@@ -256,17 +227,27 @@ export default function ChatPage() {
               <MessagesCircle />
             </div>
 
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer"
-            >
-              <Plus size={16} />
-              <span>Novo</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer"
+              >
+                <Plus size={16} />
+                <span>Novo</span>
+              </button>
+
+              <button
+                title="Sair do Chat"
+                onClick={() => navigate("/")}
+                className="md:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 rounded-lg transition-colors cursor-pointer"
+              >
+                <SquareArrowRightExit size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Input de Pesquisa */}
-          <div className="p-3">
+          <div className="p-3 shrink-0">
             <div className="relative flex items-center">
               <Search
                 className="absolute left-3 text-slate-400 dark:text-zinc-500"
@@ -294,22 +275,18 @@ export default function ChatPage() {
                 const displayName = getRoomDisplayName(room);
                 const avatarUrl = getRoomAvatar(room);
 
-                // 1. Identifica se é conversa direta
                 const isDirect = room.type === ChatType.DIRECT;
 
-                // 2. Localiza o outro participante da sala
                 const otherParticipant = room.participants?.find(
                   (p) => String(p.userId) !== String(user?.id),
                 );
 
-                // 3. Busca os dados do participante na store de usuários para ler o 'connected'
                 const targetUser = isDirect
                   ? getUserFromUserStore(otherParticipant?.userId)
                   : null;
 
                 const isOnline = Boolean(targetUser?.connected);
 
-                // 4. Quantidade de mensagens não lidas para esta sala
                 const unreadCount =
                   unreadByRoom[room.id] || unreadByRoom[String(room.id)] || 0;
 
@@ -328,14 +305,13 @@ export default function ChatPage() {
                         <img
                           src={avatarUrl}
                           alt={displayName}
-                          className="w-11 h-11 rounded-full object-cover shadow-xs border border-slate-200 dark:border-zinc-700"
+                          className="w-11 h-11 rounded-full object-cover shadow-xs border border-slate-200 dark:border-zinc-700 shrink-0"
                         />
                       ) : (
-                        <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center font-semibold text-sm shadow-xs">
+                        <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center font-semibold text-sm shadow-xs shrink-0">
                           {displayName.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      {/* Renderiza o badge de conexão apenas em chats diretos */}
                       {isDirect && (
                         <span
                           className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-zinc-900 ${
@@ -352,7 +328,6 @@ export default function ChatPage() {
                           {displayName}
                         </h2>
 
-                        {/* BADGE DE MENSAGENS NÃO LIDAS */}
                         {unreadCount > 0 && (
                           <span className="ml-2 px-2 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full animate-pulse shrink-0">
                             {unreadCount > 99 ? "99+" : unreadCount}
@@ -382,29 +357,42 @@ export default function ChatPage() {
         </aside>
 
         {/* ÁREA DE MENSAGENS */}
-        <main className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-zinc-950 relative overflow-hidden">
+        <main
+          className={`${
+            !activeRoom ? "hidden md:flex" : "flex"
+          } flex-1 flex-col h-full w-full max-w-full bg-slate-100/60 dark:bg-zinc-950 relative overflow-hidden min-w-0`}
+        >
           {activeRoom ? (
             <>
               {/* Header do Chat Ativo */}
-              <header className="p-4 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between shrink-0 shadow-xs">
-                <div className="flex items-center gap-3">
+              <header className="p-3 md:p-4 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between shrink-0 shadow-xs w-full min-w-0">
+                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                  {/* Botão de Voltar no Mobile */}
+                  <button
+                    onClick={() => setActiveRoom(null)}
+                    className="p-1.5 -ml-1 text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 md:hidden shrink-0"
+                    title="Voltar para conversas"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
+
                   {getRoomAvatar(activeRoom) ? (
                     <img
                       src={getRoomAvatar(activeRoom)!}
                       alt={getRoomDisplayName(activeRoom)}
-                      className="w-10 h-10 rounded-full object-cover shadow-xs border border-slate-200 dark:border-zinc-700"
+                      className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover shadow-xs border border-slate-200 dark:border-zinc-700 shrink-0"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                    <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
                       {getRoomDisplayName(activeRoom).charAt(0).toUpperCase()}
                     </div>
                   )}
 
-                  <div>
-                    <h2 className="font-bold text-slate-900 dark:text-zinc-100 text-sm md:text-base leading-tight">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-bold text-slate-900 dark:text-zinc-100 text-sm md:text-base leading-tight truncate">
                       {getRoomDisplayName(activeRoom)}
                     </h2>
-                    <span className="text-xs text-slate-500 dark:text-zinc-400">
+                    <span className="text-xs text-slate-500 dark:text-zinc-400 block truncate">
                       {activeRoom.type === ChatType.GROUP
                         ? `${activeRoom.participants.length} participantes`
                         : "Mensagem Direta"}
@@ -412,10 +400,10 @@ export default function ChatPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => setActiveRoom(null)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer hidden md:flex"
                     title="Fechar conversa"
                   >
                     <X size={18} />
@@ -423,8 +411,8 @@ export default function ChatPage() {
                 </div>
               </header>
 
-              {/* MENSAGENS */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+              {/* LISTA DE MENSAGENS (overflow-x-hidden impede a rolagem horizontal) */}
+              <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 md:p-6 space-y-4 w-full min-w-0">
                 {activeRoomMessages.map((msg) => {
                   const isMe = String(msg.senderId) === String(user?.id);
 
@@ -439,7 +427,9 @@ export default function ChatPage() {
                   return (
                     <div
                       key={msg.id}
-                      className={`flex items-end gap-2.5 ${isMe ? "justify-end" : "justify-start"}`}
+                      className={`flex items-end gap-1.5 md:gap-2.5 w-full min-w-0 ${
+                        isMe ? "justify-end" : "justify-start"
+                      }`}
                     >
                       {!isMe && (
                         <div className="shrink-0 mb-0.5">
@@ -447,11 +437,11 @@ export default function ChatPage() {
                             <img
                               src={senderAvatar}
                               alt={senderName}
-                              className="w-8 h-8 rounded-full object-cover shadow-xs border border-slate-200 dark:border-zinc-700"
+                              className="w-7 h-7 md:w-8 md:h-8 rounded-full object-cover shadow-xs border border-slate-200 dark:border-zinc-700 shrink-0"
                             />
                           ) : (
                             <div
-                              className="w-8 h-8 rounded-full bg-gradient-to-tr from-slate-400 to-slate-600 dark:from-zinc-700 dark:to-zinc-800 text-white font-semibold text-xs flex items-center justify-center shadow-xs"
+                              className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-tr from-slate-400 to-slate-600 dark:from-zinc-700 dark:to-zinc-800 text-white font-semibold text-xs flex items-center justify-center shadow-xs shrink-0"
                               title={senderName}
                             >
                               {senderName.charAt(0).toUpperCase()}
@@ -460,25 +450,30 @@ export default function ChatPage() {
                         </div>
                       )}
 
+                      {/* Balão de mensagem: limita tamanho e força quebra de palavra */}
                       <div
-                        className={`max-w-[75%] md:max-w-md px-4 py-2.5 rounded-2xl text-sm shadow-xs transition-all ${
+                        className={`max-w-[78%] md:max-w-md px-3 py-2 md:px-4 md:py-2.5 rounded-2xl text-sm shadow-xs transition-all min-w-0 overflow-hidden break-words [overflow-wrap:anywhere] ${
                           isMe
                             ? "bg-indigo-600 text-white rounded-br-xs"
                             : "bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800 text-slate-800 dark:text-zinc-100 rounded-bl-xs"
                         }`}
                       >
                         <span
-                          className={`block text-[11px] font-bold ${isMe ? "text-white dark:text-white" : "text-indigo-500"} mb-0.5`}
+                          className={`block text-[11px] font-bold truncate ${
+                            isMe
+                              ? "text-white dark:text-white"
+                              : "text-indigo-500"
+                          } mb-0.5`}
                         >
                           {isMe ? "Você" : senderName}
                         </span>
 
-                        <p className="whitespace-pre-wrap leading-relaxed break-words">
+                        <div className="whitespace-pre-wrap leading-relaxed break-words break-all [overflow-wrap:anywhere] text-xs md:text-sm">
                           {renderFormattedMessage(
                             msg.content,
                             handleOpenTaskDetails,
                           )}
-                        </p>
+                        </div>
 
                         <span
                           className={`text-[10px] block text-right mt-1 font-medium ${
@@ -500,11 +495,11 @@ export default function ChatPage() {
                             <img
                               src={myAvatar}
                               alt="Seu perfil"
-                              className="w-8 h-8 rounded-full object-cover shadow-xs border border-slate-200 dark:border-zinc-700"
+                              className="w-7 h-7 md:w-8 md:h-8 rounded-full object-cover shadow-xs border border-slate-200 dark:border-zinc-700 shrink-0"
                             />
                           ) : (
                             <div
-                              className="w-8 h-8 rounded-full bg-indigo-700 text-white font-semibold text-xs flex items-center justify-center shadow-xs"
+                              className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-indigo-700 text-white font-semibold text-xs flex items-center justify-center shadow-xs shrink-0"
                               title="Você"
                             >
                               {(user?.name || "V").charAt(0).toUpperCase()}
@@ -519,24 +514,32 @@ export default function ChatPage() {
               </div>
 
               {/* Input de Envio de Mensagem */}
-              <footer className="p-3 md:p-4 bg-white dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-800 shrink-0 relative">
+              <footer className="p-2 md:p-4 bg-white dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-800 shrink-0 relative w-full min-w-0">
                 {/* POPOVER DO SELETOR DE EMOJIS */}
                 {showEmojiPicker && (
-                  <div className="absolute bottom-full mb-2 right-4 md:right-16 z-40 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800">
-                    <EmojiPicker
-                      theme={Theme.AUTO} // Ajusta automaticamente para Dark/Light mode
-                      onEmojiClick={handleEmojiClick}
-                      lazyLoadEmojis
-                      searchPlaceHolder="Buscar emoji..."
-                      width={320}
-                      height={400}
-                    />
+                  <div className="absolute bottom-full mb-2 right-2 left-2 md:left-auto md:right-16 z-40 max-w-[300px] mx-auto shadow-2xl rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800">
+                    <Suspense
+                      fallback={
+                        <div className="w-[300px] h-[320px] flex items-center justify-center bg-white dark:bg-zinc-900 text-xs text-slate-400">
+                          Carregando emojis...
+                        </div>
+                      }
+                    >
+                      <EmojiPicker
+                        theme={"auto" as Theme}
+                        onEmojiClick={handleEmojiClick}
+                        lazyLoadEmojis
+                        searchPlaceHolder="Buscar emoji..."
+                        width="100%"
+                        height={320}
+                      />
+                    </Suspense>
                   </div>
                 )}
-                {/* POPOVER DE SUGESTÕES DE TAREFAS */}
+
                 {/* AUTOCOMPLETE DROPDOWN (#) */}
                 {showTaskSuggestions && (
-                  <div className="absolute bottom-full mb-2 left-4 right-4 md:left-6 md:right-6 max-w-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl overflow-hidden z-30 max-h-56 overflow-y-auto">
+                  <div className="absolute bottom-full mb-2 left-2 right-2 md:left-6 md:right-6 max-w-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl overflow-hidden z-30 max-h-56 overflow-y-auto">
                     <div className="p-2.5 border-b border-slate-100 dark:border-zinc-800 text-[11px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider flex justify-between items-center">
                       <span>Vincular Tarefa (#)</span>
                       <span className="text-[10px] font-normal text-slate-400">
@@ -569,7 +572,6 @@ export default function ChatPage() {
                               .includes(taskSearchQuery),
                         )
                         .map((task) => {
-                          // Usa o código curto (ex: TSK-01) ou fallbacks
                           const taskCode =
                             task.code || `#${task.id.slice(0, 6)}`;
 
@@ -577,7 +579,6 @@ export default function ChatPage() {
                             <button
                               key={task.id}
                               type="button"
-                              // Dentro do map das sugestões do autocomplete (showTaskSuggestions):
                               onClick={() => {
                                 const lastHashIndex =
                                   messageInput.lastIndexOf("#");
@@ -586,7 +587,6 @@ export default function ChatPage() {
                                   ? `${task.title} (${task.code})`
                                   : task.title;
 
-                                // Salva no formato: #[Texto Visivel](ID_UNICO)
                                 const taskMentionText = `#[${displayLabel}](${task.id}) `;
 
                                 const newText =
@@ -598,18 +598,15 @@ export default function ChatPage() {
                               className="w-full text-left p-2.5 hover:bg-slate-100 dark:hover:bg-zinc-800 flex items-center justify-between text-xs transition-colors cursor-pointer border-b border-slate-50 dark:border-zinc-800/50 last:border-none gap-2"
                             >
                               <div className="flex items-center gap-2 truncate min-w-0 flex-1">
-                                {/* Título em destaque primeiro */}
                                 <span className="text-slate-800 dark:text-zinc-100 font-semibold truncate">
                                   {task.title || "Sem título"}
                                 </span>
 
-                                {/* Código da tarefa ao lado do título */}
                                 <span className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 font-bold shrink-0 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-200/50 dark:border-indigo-800/50">
                                   {taskCode}
                                 </span>
                               </div>
 
-                              {/* Status Badge */}
                               {task.status && (
                                 <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-500 font-semibold shrink-0 uppercase">
                                   {task.status}
@@ -628,21 +625,20 @@ export default function ChatPage() {
 
                 <form
                   onSubmit={handleSend}
-                  className="flex items-center gap-2 w-full max-w-5xl mx-auto"
+                  className="flex items-center gap-1.5 md:gap-2 w-full max-w-5xl mx-auto min-w-0"
                 >
-                  <div className="flex flex-1 items-center relative">
+                  <div className="flex flex-1 items-center relative min-w-0">
                     <textarea
                       ref={textareaRef}
                       rows={1}
                       placeholder={
                         isConnected
-                          ? "Digite sua mensagem (use # para citar uma tarefa)..."
+                          ? "Digite sua mensagem..."
                           : "Conectando ao chat..."
                       }
                       value={messageInput}
                       onChange={handleInputChange}
                       onKeyDown={(e) => {
-                        // Se pressionar Enter SEM a tecla Shift, envia a mensagem
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
                           if (isConnected && messageInput.trim()) {
@@ -651,25 +647,24 @@ export default function ChatPage() {
                         }
                       }}
                       disabled={!isConnected}
-                      className="resize-none overflow-hidden w-full pr-15 whitespace-normal px-4 py-2.5 bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 border border-transparent dark:border-zinc-700/50 disabled:opacity-50 transition-all"
+                      className="resize-none overflow-hidden w-full pr-8 whitespace-normal px-3 py-2 bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 border border-transparent dark:border-zinc-700/50 disabled:opacity-50 transition-all"
                     />
-                    {/* Botão para abrir/fechar o Emoji Picker */}
                     <button
                       type="button"
                       onClick={() => {
                         setShowEmojiPicker((prev) => !prev);
-                        setShowTaskSuggestions(false); // Fecha o autocomplete do # se estiver aberto
+                        setShowTaskSuggestions(false);
                       }}
-                      className="absolute right-3 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1 rounded-lg cursor-pointer"
+                      className="absolute right-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1 rounded-lg cursor-pointer"
                       title="Inserir emoji"
                     >
-                      <Smile size={20} />
+                      <Smile size={18} />
                     </button>
                   </div>
                   <button
                     type="submit"
                     disabled={!isConnected || !messageInput.trim()}
-                    className="p-2.5 md:px-5 md:py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:hover:bg-indigo-600 shrink-0 shadow-xs cursor-pointer"
+                    className="p-2 md:px-5 md:py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:hover:bg-indigo-600 shrink-0 shadow-xs cursor-pointer"
                   >
                     <Send size={16} />
                     <span className="hidden md:inline">Enviar</span>
@@ -678,7 +673,7 @@ export default function ChatPage() {
               </footer>
             </>
           ) : (
-            /* Estado Vazio */
+            /* Estado Vazio (Apenas Desktop) */
             <div className="flex-1 flex flex-col justify-between p-4 h-full">
               <div className="flex justify-end">
                 <button
@@ -723,39 +718,6 @@ export default function ChatPage() {
               </div>
 
               <div className="p-5 space-y-4">
-                {/* <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 dark:bg-zinc-800 rounded-xl"> */}
-                {/* <button
-                    type="button"
-                    onClick={() => {
-                      setIsGroupMode(false);
-                      setSelectedUserIds([]);
-                    }}
-                    className={`py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      !isGroupMode
-                        ? "bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                        : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
-                    }`}
-                  >
-                    <UserIcon size={14} />
-                    <span>Privado</span>
-                  </button> */}
-                {/* <button
-                    type="button"
-                    onClick={() => {
-                      setIsGroupMode(true);
-                      setSelectedUserIds([]);
-                    }}
-                    className={`py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      isGroupMode
-                        ? "bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                        : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
-                    }`}
-                  >
-                    <Users size={14} />
-                    <span>Criar Grupo</span>
-                  </button> */}
-                {/* </div> */}
-
                 {isGroupMode && (
                   <div>
                     <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">
@@ -788,15 +750,11 @@ export default function ChatPage() {
                             <div
                               key={u.id}
                               onClick={() => {
-                                // if (isGroupMode) {
                                 setSelectedUserIds((prev) =>
                                   isChecked
                                     ? prev.filter((id) => id !== u.id)
                                     : [...prev, u.id],
                                 );
-                                // } else {
-                                //   setSelectedUserIds([u.id]);
-                                // }
                               }}
                               className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
                                 isChecked
@@ -809,10 +767,10 @@ export default function ChatPage() {
                                   <img
                                     src={uAvatar}
                                     alt={u.name}
-                                    className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-zinc-700"
+                                    className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-zinc-700 shrink-0"
                                   />
                                 ) : (
-                                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-semibold text-xs flex items-center justify-center">
+                                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-semibold text-xs flex items-center justify-center shrink-0">
                                     {(u.name || u.email || "U")
                                       .charAt(0)
                                       .toUpperCase()}

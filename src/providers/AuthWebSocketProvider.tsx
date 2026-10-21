@@ -1,4 +1,4 @@
-import Cookies from "js-cookie";
+/* eslint-disable react-refresh/only-export-components */
 import React, {
   createContext,
   useCallback,
@@ -13,9 +13,9 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 interface AuthWebSocketContextType {
   isConnected: boolean;
-  subscribe: (
+  subscribe: <T = unknown>(
     destination: string,
-    callback: (message: any) => void,
+    callback: (message: T) => void,
   ) => StompSubscription | null;
 }
 
@@ -28,54 +28,62 @@ export const AuthWebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const clientRef = useRef<Client | null>(null);
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [isConnectedState, setIsConnectedState] = useState<boolean>(false);
   const { isAuthenticated } = useAuthStore();
+  const isConnected = isAuthenticated && isConnectedState;
 
   useEffect(() => {
-    const currentToken = Cookies.get("auth_token");
-
-    if (!currentToken) {
+    if (!isAuthenticated) {
+      console.log(
+        "[AuthWebSocketProvider] Token de autenticação não encontrado.",
+      );
       if (clientRef.current?.active) {
         clientRef.current.deactivate();
-        setIsConnected(false);
       }
+      clientRef.current = null;
       return;
     }
 
+    // Se a instância já estiver ativa e conectada, reutiliza a conexão existente
     if (clientRef.current?.active && clientRef.current?.connected) {
       return;
     }
 
-    const AUTH_WS_URL = import.meta.env.VITE_AUTH_WS_URL;
+    console.log("[AuthWebSocketProvider] 🔌 Iniciando conexão...");
+
+    // Se a variável contiver apenas '/ws', concatena com a origem do navegador
+    // ✅ Monta explicitamente a URL absoluta do endpoint HTTP/SockJS no Nginx
+    // Exemplo final: "http://ip:port/ws"
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const wsEndpoint = `${origin}/ws/`;
+
+    // const AUTH_WS_URL = import.meta.env.VITE_AUTH_WS_URL || "/ws";
 
     const client = new Client({
-      webSocketFactory: () => new SockJS(AUTH_WS_URL),
-
-      // Injeta o token diretamente na criação do objeto
-      connectHeaders: {
-        Authorization: `Bearer ${Cookies.get("auth_token") || ""}`,
-      },
-
-      beforeConnect: () => {
-        const token = Cookies.get("auth_token");
-        if (token) {
-          client.connectHeaders = { Authorization: `Bearer ${token}` };
-        }
-      },
+      // Habilita withCredentials no SockJS para enviar o cookie HttpOnly no Handshake HTTP
+      webSocketFactory: () =>
+        new SockJS(wsEndpoint, null, {
+          withCredentials: true,
+        } as SockJS.Options),
 
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,
 
       onConnect: () => {
-        console.log("[AuthWebSocket] ✅ Conectado ao WebSocket de Autenticação.");
-        setIsConnected(true);
+        console.log(
+          "[AuthWebSocket] ✅ Conectado ao WebSocket de Autenticação.",
+        );
+        setIsConnectedState(true);
       },
-      onDisconnect: () => setIsConnected(false),
-      onWebSocketClose: () => setIsConnected(false),
+      onDisconnect: () => setIsConnectedState(false),
+      onWebSocketClose: () => setIsConnectedState(false),
       onStompError: (frame) => {
-        console.error("[AuthWebSocket] ❌ Erro STOMP Auth:", frame.headers["message"]);
-        setIsConnected(false);
+        console.error(
+          "[AuthWebSocket] ❌ Erro STOMP Auth:",
+          frame.headers["message"],
+        );
+        setIsConnectedState(false);
       },
     });
 
@@ -84,12 +92,12 @@ export const AuthWebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return () => {
       client.deactivate();
-      setIsConnected(false);
+      setIsConnectedState(false);
     };
   }, [isAuthenticated]);
 
   const subscribe = useCallback(
-    (destination: string, callback: (message: any) => void) => {
+    <T = unknown,>(destination: string, callback: (message: T) => void) => {
       if (!clientRef.current || !clientRef.current.connected) {
         return null;
       }

@@ -1,26 +1,33 @@
-import axios from 'axios';
-import Cookies from "js-cookie";
+import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL as string;
+const baseURL = import.meta.env.VITE_API_BASE_URL as string || "";
 
-if (!baseURL) {
-  throw new Error("A variável de ambiente VITE_API_BASE_URL não está configurada.");
-}
+// if (!baseURL) {
+//   throw new Error(
+//     "A variável de ambiente VITE_API_BASE_URL não está configurada.",
+//   );
+// }
 
 export const api = axios.create({
   baseURL,
+  withCredentials: true, //OBRIGATÓRIO: Instrui o Axios/Navegador a enviar cookies HttpOnly em todas as requisições
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// Interceptor: Lê o token do cookie e injeta no cabeçalho de saída
-api.interceptors.request.use((config) => {
-  const token = Cookies.get("auth_token");
-  
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  
-  return config;
-});
+// Interceptor de Resposta: Captura 401 Unauthorized (sessão expirada) e redireciona para login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname !== "/login"
+      ) {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  },
+);

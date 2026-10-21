@@ -12,12 +12,12 @@ import type { TaskHistories } from "@/types/task-history";
 
 export const taskApi = {
   findAllUsers: async (): Promise<UserResponse[]> => {
-    const response = await api.get<UserResponse[]>("/v1/user");
+    const response = await api.get<UserResponse[]>("/api-kanban/user");
     return response.data;
   },
 
   findAll: async (): Promise<Task[]> => {
-    const response = await api.get<Task[]>("/v1/task");
+    const response = await api.get<Task[]>("/api-kanban/task");
     return response.data;
   },
 
@@ -54,18 +54,18 @@ export const taskApi = {
       params.append("endDate", formattedEnd);
     }
     const response = await api.get<PageResponse<Task>>(
-      `/v1/task/paged?${params.toString()}`,
+      `/api-kanban/task/paged?${params.toString()}`,
     );
     return response.data;
   },
 
   // Criar uma nova tarefa
   create: async (data: TaskRequestDTO): Promise<void> => {
-    await api.post("/v1/task/create", data);
+    await api.post("/api-kanban/task/create", data);
   },
 
   findMetrics: async (): Promise<TaskMetrics[]> => {
-    const response = await api.get<TaskMetrics[]>("/v1/task/metrics");
+    const response = await api.get<TaskMetrics[]>("/api-kanban/task/metrics");
     return response.data;
   },
 
@@ -74,7 +74,7 @@ export const taskApi = {
     id: string,
     statusData: UpdateTaskStatusDTO,
   ): Promise<Task | null> => {
-    const response = await api.patch<Task>(`/v1/task/${id}/status`, statusData);
+    const response = await api.patch<Task>(`/api-kanban/task/${id}/status`, statusData);
 
     // Se o backend retornar HTTP 204 No Content (quando nada foi alterado)
     if (response.status === 204) {
@@ -85,7 +85,7 @@ export const taskApi = {
   },
 
   findAllHistories: async (taskId: string): Promise<TaskHistories[]> => {
-    const response = await api.get(`/v1/tasks-histories/${taskId}`);
+    const response = await api.get(`/api-kanban/tasks-histories/${taskId}`);
     return response.data;
   },
 };

@@ -1,4 +1,3 @@
-import Cookies from "js-cookie";
 /* eslint-disable react-refresh/only-export-components */
 import React, {
   createContext,
@@ -14,11 +13,11 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 interface WebSocketContextType {
   isConnected: boolean;
-  subscribe: (
+  subscribe: <T = unknown>(
     destination: string,
-    callback: (message: any) => void,
+    callback: (message: T) => void,
   ) => StompSubscription | null;
-  publish: (destination: string, body: any) => void;
+  publish: (destination: string, body: unknown) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -31,22 +30,17 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const clientRef = useRef<Client | null>(null);
-  const [isConnected, setIsConnected] = useState<boolean>(false);
-
-  // Pegamos o estado de login do AuthContext para disparar o useEffect automaticamente pós-login
-  const { isAuthenticated } = useAuthStore(); // Ou leia o token diretamente
+  const [isConnectedState, setIsConnectedState] = useState<boolean>(false);
+  const { isAuthenticated } = useAuthStore();
+  const isConnected = isAuthenticated && isConnectedState;
 
   useEffect(() => {
-    const currentToken = Cookies.get("auth_token");
-
-    // Se deslogar ou não tiver token, garante encerramento da conexão
-    if (!currentToken) {
+    if (!isAuthenticated) {
       console.log("[WebSocketProvider] Token de autenticação não encontrado.");
       if (clientRef.current?.active) {
         clientRef.current.deactivate();
       }
       clientRef.current = null;
-      setIsConnected(false);
       return;
     }
 
@@ -57,25 +51,17 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     console.log("[WebSocketProvider] 🔌 Iniciando conexão...");
 
-    const WS_URL = import.meta.env.VITE_WS_URL;
+    // Se a variável contiver apenas '/ws', concatena com a origem do navegador
+    // ✅ Monta explicitamente a URL absoluta do endpoint HTTP/SockJS no Nginx
+    // Exemplo final: "http://ip:port/ws-kanban"
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const wsEndpoint = `${origin}/ws-kanban/`;
+
+    // const WS_URL = import.meta.env.VITE_WS_URL || "/ws-kanban";
 
     const client = new Client({
       webSocketFactory: () =>
-        new SockJS(WS_URL, null, { withCredentials: true } as any),
-
-      //Definimos o Header Authorization diretamente no objeto de configuração
-      connectHeaders: {
-        Authorization: `Bearer ${currentToken}`,
-      },
-
-      // webSocketFactory: () => new SockJS(WS_URL),
-
-      // beforeConnect: () => {
-      //   const token = Cookies.get("auth_token");
-      //   if (token) {
-      //     client.connectHeaders = { Authorization: `Bearer ${token}` };
-      //   }
-      // },
+        new SockJS(wsEndpoint, null, { withCredentials: true } as SockJS.Options),
 
       reconnectDelay: 5000, // Tenta reconectar a cada 5 segundos se a conexão cair
       heartbeatIncoming: 10000,
@@ -85,25 +71,25 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log("[WebSocketProvider] ✅ Conectado ao WebSocket via STOMP.");
         // Força atualização no próximo tick do React para garantir que o clientRef já esteja pronto
         setTimeout(() => {
-          setIsConnected(true);
+          setIsConnectedState(true);
         }, 0);
       },
       onDisconnect: () => {
         console.log("[WebSocketProvider] ⚠️ Desconectado do WebSocket.");
-        setIsConnected(false);
+        setIsConnectedState(false);
       },
       onWebSocketClose: () => {
         console.log(
           "[WebSocketProvider] ⚠️ Conexão STOMP fechada/desconectada.",
         );
-        setIsConnected(false);
+        setIsConnectedState(false);
       },
       onStompError: (frame) => {
         console.error(
           "[WebSocketProvider] ❌ Erro de WebSocket STOMP:",
           frame.headers["message"],
         );
-        setIsConnected(false);
+        setIsConnectedState(false);
       },
     });
 
@@ -112,18 +98,18 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return () => {
       // Se o usuário deslogar (sem token no cookie), encerra a conexão
-      if (!Cookies.get("auth_token") && clientRef.current) {
+      if (!isAuthenticated && clientRef.current) {
         console.log("[WebSocketProvider] 🔌 Encerrando cliente STOMP...");
         clientRef.current.deactivate();
         clientRef.current = null;
-        setIsConnected(false);
+        setIsConnectedState(false);
       }
     };
     //Ao colocar `isAuthenticated` ou a checagem do cookie na dependência,
     // o useEffect roda novamente no momento exato em que o usuário faz login!
   }, [isAuthenticated]);
 
-  const publish = useCallback((destination: string, body: any) => {
+  const publish = useCallback((destination: string, body: unknown) => {
     if (!clientRef.current || !clientRef.current.connected) {
       console.warn(
         `[WebSocketProvider] Tentativa de envio para "${destination}" falhou: Socket desconectado.`,
@@ -139,7 +125,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Função genérica para qualquer componente se inscrever em qualquer tópico
   const subscribe = useCallback(
-    (destination: string, callback: (message: any) => void) => {
+    <T = unknown,>(destination: string, callback: (message: T) => void) => {
       let sub: StompSubscription | null = null;
       let isUnsubscribed = false;
 

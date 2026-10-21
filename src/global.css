@@ -187,3 +187,19 @@
     background: rgba(148, 163, 184, 0.6);
   }
 }
+
+html, body, #root {
+  height: 100dvh;
+  height: -webkit-fill-available;
+  width: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  position: fixed; /* Trava a página e impede o efeito de arrastar a tela inteira */
+}
+
+/* Força a quebra de texto longo (como links ou tags de tarefas) em qualquer tela */
+* {
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}

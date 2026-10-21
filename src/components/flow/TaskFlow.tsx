@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { Task } from "@/types/task";
 import {
-  Background,
+  // Background,
   ConnectionMode,
   Controls,
   MiniMap,
@@ -15,6 +15,7 @@ import { AlertCircle, MousePointerClick, Workflow } from "lucide-react";
 import { DetailsSquareComponents } from "./nodes/DetailsSquare";
 import { SquareComponent } from "./nodes/Square";
 import { HistorySquareComponents } from "./nodes/HistorySquare";
+import { useBackgroundStore } from "@/store/useBackgroundStore";
 
 interface ITaskFlow {
   data: Task | undefined;
@@ -39,6 +40,7 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
     selectedTaskId,
     hasHydrated,
   } = useFlowStore();
+  const { bgImage } = useBackgroundStore();
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -68,7 +70,7 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
           ),
         );
       } else {
-        // 💡 SE TROCOU PARA UMA TAREFA DIFERENTE:
+        // SE TROCOU PARA UMA TAREFA DIFERENTE:
         // Aí sim limpa o canvas e abre apenas o nó principal da nova tarefa.
         setNodes([
           {
@@ -85,9 +87,16 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
   }, [selectedTaskId, data, setNodes, setEdges, hasHydrated]);
 
   return (
-    <div className="w-full h-full relative bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
+    // <div className="w-full h-full relative bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
+    <div
+      className={`w-full h-full relative flex flex-col items-center justify-center transition-colors duration-300 ${
+        bgImage
+          ? "bg-transparent" // Leve camada para destacar os pontos do ReactFlow e nós
+          : "bg-slate-50 dark:bg-slate-950"
+      }`}
+    >
       {!selectedTaskId && (
-        <div className="absolute z-10 flex flex-col items-center justify-center p-8 text-center max-w-sm rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-xl transition-all">
+        <div className="absolute z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center p-8 text-center max-w-sm rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-xl transition-all">
           <div className="p-3 bg-violet-50 dark:bg-violet-950/50 rounded-2xl text-violet-600 dark:text-violet-400 mb-4 border border-violet-200/50 dark:border-violet-800/50">
             <Workflow size={32} />
           </div>
@@ -134,18 +143,17 @@ export function TaskFlow({ data, isDarkMode }: ITaskFlow) {
         fitViewOptions={{
           maxZoom: 1, // Impede que o fitView dê zoom excessivo em nós únicos
           padding: 0.3, // Mantém uma margem elegante em volta do nó
-          duration: 300, // 👈 Anima a câmera suavemente para ajustar o foco após criar o nó
+          duration: 300, // Anima a câmera suavemente para ajustar o foco após criar o nó
         }}
         // noWheelClassName="nowheel"
+        style={{ backgroundColor: "transparent" }}
+        className="w-full h-full !bg-transparent"
       >
-        {/* <Background gap={12} size={2} color={colors.zinc[300]} />
-        <Controls />
-        <MiniMap /> */}
-        <Background
+        {/* <Background
           gap={12}
           size={2}
           color={isDarkMode ? colors.zinc[700] : colors.zinc[300]}
-        />
+        /> */}
         <Controls className="bg-white dark:[&>button]:!bg-slate-900 border border-slate-200 dark:border-slate-200 fill-slate-700 dark:fill-slate-200 text-slate-700 dark:text-slate-200 shadow-lg rounded-xl overflow-hidden [&>button]:border-slate-200 dark:[&>button]:border-slate-800 dark:[&>button]:hover:!bg-slate-500" />
 
         {/* 🗺️ MiniMap estilizado com cores condicionalmente ajustadas */}

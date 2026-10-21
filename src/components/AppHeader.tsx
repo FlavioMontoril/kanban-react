@@ -32,7 +32,6 @@ import type { TaskStatus } from "@/types/task";
 import { useMemo, useRef, useState } from "react";
 import { useTaskModalStore } from "@/store/useTaskModalStore";
 import { useTasks } from "@/hooks/useTasks";
-import { useAuthStore } from "@/store/useAuthStore";
 import type { UserAuthInfo } from "@/types/authentication";
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
@@ -50,6 +49,8 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useChatNotificationStore } from "@/store/useChatNotificationStore";
 import { SelectViewMode } from "./commons/SelectViewMode";
+import { userInitials } from "@/lib/userInitials";
+import { BackgroundSelector } from "./BackgroundSelectorModal";
 
 interface AppHeaderProps {
   isDarkMode: boolean;
@@ -59,8 +60,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
   const { openModal } = useTaskModalStore();
-  const { logout } = useAuthStore();
-  const { users, avatarUpload } = useAuth();
+  const { users, roles, avatarUpload, logoutUser } = useAuth();
   const {
     selectedStatus,
     selectedView,
@@ -83,6 +83,10 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
+
+  const rolePerUser = roles.find(
+    (role) => String(role?.id) === String(user?.role),
+  );
 
   // Redireciona o scroll vertical da roda do mouse para scroll horizontal
   const handleWheelScroll = (e: React.WheelEvent<HTMLDivElement>) => {
@@ -115,7 +119,7 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
   };
 
   const handleLogout = () => {
-    logout();
+    logoutUser();
     sessionStorage.removeItem("has-seen-splash");
   };
 
@@ -140,16 +144,6 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
     }
   };
 
-  // Extrai as iniciais do nome do usuário para o fallback do Avatar
-  const userInitials = useMemo(() => {
-    if (!user?.name) return "US";
-    const parts = user.name.trim().split(" ");
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-    }
-    return parts[0].substring(0, 2).toUpperCase();
-  }, [user?.name]);
-
   const avatar = users.find((u) => u.id === user.id)?.avatar;
   const avatarUrl = getAvatarUrl(avatar!);
 
@@ -166,11 +160,11 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
           <div
             // onMouseEnter={() => setIsBandejaAberta(true)}
             // onMouseLeave={() => setIsBandejaAberta(false)}
-            className="flex items-center justify-between shrink-0 w-auto min-h-[40px] max-w-full"
+            className="flex items-center justify-between shrink-0 w-auto min-h-[40px] max-w-full shadow-lg "
           >
             <div
               className={cn(
-                "flex items-center p-1 rounded-2xl border bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm w-full sm:w-auto justify-between max-w-full",
+                "flex items-center p-1 rounded-lg border bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm w-full sm:w-auto justify-between max-w-full",
                 "border-slate-200/80 dark:border-slate-800",
                 "transition-all duration-[1500ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
                 isBandejaAberta
@@ -196,6 +190,8 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                     value={selectedView}
                     onSelect={setSelectedView}
                   />
+
+                  <BackgroundSelector />
 
                   <button
                     type="button"
@@ -344,7 +340,9 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                   <DropdownMenuTrigger className="rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 hover:opacity-90 transition-opacity">
                     <Avatar title={user.name} className="w-7 h-7">
                       <AvatarImage src={avatarUrl!} alt={user.name} />
-                      <AvatarFallback>{userInitials}</AvatarFallback>
+                      <AvatarFallback>
+                        {userInitials(user?.name)}
+                      </AvatarFallback>
                       <AvatarBadge className="bg-emerald-500 dark:bg-emerald-600" />
                     </Avatar>
                   </DropdownMenuTrigger>
@@ -358,7 +356,7 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                       <Avatar className="w-16 h-16 mb-3 shadow-md border-2 border-blue-600 group-hover:border-slate-400 dark:border-slate-700">
                         <AvatarImage src={avatarUrl!} alt={user.name} />
                         <AvatarFallback className="text-lg font-bold">
-                          {userInitials}
+                          {userInitials(user?.name)}
                         </AvatarFallback>
                       </Avatar>
 
@@ -390,7 +388,7 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
 
                       <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[11px] font-semibold border border-indigo-500/20">
                         <Shield className="w-3 h-3" />
-                        <span>{user.role}</span>
+                        <span>{rolePerUser?.name}</span>
                       </div>
 
                       {/* BOTÃO PRINCIPAL DE AÇÃO ESTILO GOOGLE */}
@@ -409,7 +407,7 @@ export function AppHeader({ isDarkMode, toggleTheme, user }: AppHeaderProps) {
                         <User className="w-4 h-4 text-slate-400" />
                         <span>Perfil do Usuário</span>
                       </DropdownMenuItem>
-                      {user.role === "ADMIN" && (
+                      {rolePerUser?.name === "ADMIN" && (
                         <DropdownMenuItem
                           onClick={() => setIsUserModalOpen(true)}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-slate-800"

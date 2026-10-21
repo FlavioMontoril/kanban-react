@@ -16,6 +16,8 @@ import {
 import { useUserStore } from "@/store/useUserStore";
 import { showTaskAssigneeToast } from "@/components/commons/showTaskAssigneeToast";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useTaskHistoryStore } from "@/store/useTaskHistories";
+import { taskApi } from "@/services/taskService";
 
 export function useNotificationSubscriptions() {
   const { isConnected, subscribe } = useWebSocket();
@@ -25,7 +27,7 @@ export function useNotificationSubscriptions() {
   const { addNotifications, addPresenceNotification } = useNotificationStore();
   const { updateUserPresence } = useUserStore();
   const user = useAuthStore((state) => state.user);
-
+  const { setTaskHistories } = useTaskHistoryStore();
   useEffect(() => {
     if (!isConnected) return;
 
@@ -71,11 +73,15 @@ export function useNotificationSubscriptions() {
 
     const changeStatus = subscribe(
       "/topic/task-status-changed",
-      (payload: TaskChangeStatusPayload) => {
+        async (payload: TaskChangeStatusPayload) => {
         console.log("[WEBSOCKET] Alteração de status recebida:", payload);
         const { changeStatus: updatedTask, triggeredId } = payload;
+
         setTask(updatedTask);
         addNotifications([updatedTask], "STATUS_CHANGED");
+
+        const updatedHistories = await taskApi.findAllHistories(updatedTask.id);
+        setTaskHistories(updatedHistories);
 
         // Exibe o toast apenas para o participante que NÃO executou a ação.
         const currentUser = triggeredId == user?.id;

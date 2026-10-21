@@ -1,78 +1,33 @@
 import { create } from "zustand";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
-import type { JwtPayload, UserAuthInfo } from "@/types/authentication";
-
-const TOKEN_KEY = "auth_token";
-
-// Helper para decodificar o token com segurança
-const getUserFromToken = (token: string | null): UserAuthInfo | null => {
-  if (!token) return null;
-  try {
-    const decoded = jwtDecode<JwtPayload>(token);
-    
-    // Verifica se o token expirou
-    if (decoded.exp * 1000 < Date.now()) {
-      Cookies.remove(TOKEN_KEY);
-      return null;
-    }
-
-    return {
-      id: decoded.id || "",
-      name: decoded.name,
-      email: decoded.sub,
-      role: decoded.role,
-    };
-  } catch (error) {
-    console.error("Erro ao decodificar o token JWT:", error);
-    return null;
-  }
-};
+import type { UserAuthInfo } from "@/types/authentication";
 
 interface AuthState {
-  token: string | null;
   user: UserAuthInfo | null;
   isAuthenticated: boolean;
-  login: (token: string) => void;
-  logout: () => void;
-  getUserInfo: () => UserAuthInfo | null;
+  isCheckingAuth: boolean;
+  loginState: (user: UserAuthInfo) => void;
+  logoutState: () => void;
+  setCheckingAuth: (checking: boolean) => void; // Indica se estamos validando a sessão ao abrir/recarregar a página
 }
 
-export const useAuthStore = create<AuthState>((set, get) => {
-  const initialToken = Cookies.get(TOKEN_KEY) || null;
-  const initialUser = getUserFromToken(initialToken);
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  isAuthenticated: false,
+  isCheckingAuth: true,
 
-  return {
-    token: initialToken,
-    user: initialUser,
-    isAuthenticated: Boolean(initialToken && initialUser),
+  loginState: (user) =>
+    set({
+      user,
+      isAuthenticated: true,
+      isCheckingAuth: false,
+    }),
 
-    login: (token: string) => {
-      Cookies.set(TOKEN_KEY, token, {
-        expires: 7,
-        sameSite: "strict",
-        secure: window.location.protocol === "https:",
-      });
+  logoutState: () =>
+    set({
+      user: null,
+      isAuthenticated: false,
+      isCheckingAuth: false,
+    }),
 
-      const user = getUserFromToken(token);
-
-      set({
-        token,
-        user,
-        isAuthenticated: Boolean(user),
-      });
-    },
-
-    logout: () => {
-      Cookies.remove(TOKEN_KEY);
-      set({
-        token: null,
-        user: null,
-        isAuthenticated: false,
-      });
-    },
-
-    // Função utilitária para extrair/obter os dados a qualquer momento
-    getUserInfo: () => get().user,
-  };
-});
+  setCheckingAuth: (isCheckingAuth: boolean) => set({ isCheckingAuth }),
+}));

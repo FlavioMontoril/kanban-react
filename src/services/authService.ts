@@ -8,8 +8,17 @@ export interface MessageResponse {
 }
 
 export const authApi = {
-  login: async (data: LoginRequest): Promise<LoginResponse> => {
+  login: async (data: LoginRequest): Promise<number> => {
     const response = await apiAuth.post<LoginResponse>("/api/auth/login", data);
+    return response.status;
+  },
+
+  logout: async (): Promise<void> => {
+    await apiAuth.post("/api/auth/logout");
+  },
+
+  getMe: async (): Promise<LoginResponse> => {
+    const response = await apiAuth.get<LoginResponse>("/api/auth/me");
     return response.data;
   },
 
@@ -22,12 +31,19 @@ export const authApi = {
   },
 
   createUser: async (data: FormData | UserRequest): Promise<void> => {
-    const response = await apiAuth.post("/api/users/create", data);
+    // Se os dados forem uma instância de FormData, configuramos explicitamente o Content-Type como multipart/form-data
+    const isFormData = data instanceof FormData;
+
+    const response = await apiAuth.post("/api/users/create", data, {
+      headers: isFormData
+        ? { "Content-Type": "multipart/form-data" }
+        : { "Content-Type": "application/json" },
+    });
     return response.data;
   },
 
   findUserById: async (id: string): Promise<UserResponse> => {
-    const response = await apiAuth.get<UserResponse>(`/api/users/${id}`)
+    const response = await apiAuth.get<UserResponse>(`/api/users/${id}`);
     return response.data;
   },
 

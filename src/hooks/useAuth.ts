@@ -6,19 +6,18 @@ import type { UserRequest } from "@/types/user";
 import { useCallback, useState } from "react";
 
 export function useAuth() {
-  const {roles, users, setRoles, setUsers} = useUserStore()
+  const { roles, users, setRoles, setUsers } = useUserStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuthStore();
+  const { loginState, logoutState, setCheckingAuth } = useAuthStore();
 
   const loginUser = async (data: LoginRequest) => {
     setLoading(true);
     setError(null);
     try {
       const response = await authApi.login(data);
-      if (response.token) {
-        // Grava o cookie e atualiza a Zustand Store
-        login(response.token);
+      if (response === 200) {
+        await checkSession();
       }
       return response;
     } catch (err: any) {
@@ -28,6 +27,28 @@ export function useAuth() {
       throw new Error(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Restaura a sessão ao dar F5 na página
+  const checkSession = useCallback(async () => {
+    try {
+      setCheckingAuth(true);
+      const user = await authApi.getMe(); // O browser envia o cookie HttpOnly automaticamente
+      loginState(user);
+    } catch {
+      // Se der 401 ou erro, limpa o estado (cookie expirou ou não existe)
+      logoutState();
+    } finally {
+      setCheckingAuth(false);
+    }
+  }, [loginState, logoutState, setCheckingAuth]);
+
+  const logoutUser = async () => {
+    try {
+      await authApi.logout(); // Chama o backend para expirar o cookie HttpOnly
+    } finally {
+      logoutState(); // Limpa a store no frontend
     }
   };
 
@@ -45,7 +66,6 @@ export function useAuth() {
       setLoading(false);
     }
   };
-
 
   const avatarUpload = async (userId: string, data: FormData) => {
     setLoading(true);
@@ -71,7 +91,7 @@ export function useAuth() {
       console.error("Erro ao carregar utilizadores:", err);
       return [];
     }
-  }, []);
+  }, [setUsers]);
 
   const fetchRoles = useCallback(async () => {
     try {
@@ -82,18 +102,19 @@ export function useAuth() {
       console.error("Erro ao carregar roles:", err);
       return [];
     }
-  }, []);
+  }, [setRoles]);
 
   return {
     users,
     roles,
-    login,
     loading,
     error,
+    checkSession,
     avatarUpload,
     createUser,
     fetchRoles,
     fetchUsers,
     loginUser,
+    logoutUser,
   };
 }

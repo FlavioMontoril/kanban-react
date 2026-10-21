@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   Bell,
@@ -23,6 +23,7 @@ import { getAvatarUrl } from "@/lib/getAvatarUrl";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useFlowStore } from "../flow/store/useFlowStore";
 import { useTasks } from "@/hooks/useTasks";
+import { userInitials } from "@/lib/userInitials";
 
 const eventDetails: Record<
   NotificationType,
@@ -113,16 +114,6 @@ export function NotificationMenu() {
       // setIsOpen(false); // Fecha o menu de notificações após clicar
     }
   }
-
-  const userName = notifications.map((item) => item.user?.name)?.[0];
-  const userInitials = useMemo(() => {
-    if (!userName) return "US";
-    const parts = userName?.trim().split(" ");
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-    }
-    return parts[0].substring(0, 2).toUpperCase();
-  }, [userName]);
 
   return (
     <div className="relative inline-block text-left shrink-0">
@@ -283,7 +274,7 @@ export function NotificationMenu() {
                                       //  alt={user.name}
                                     />
                                     <AvatarFallback>
-                                      {userInitials}
+                                      {userInitials(item?.user?.name!)}
                                     </AvatarFallback>
                                   </Avatar>
                                 )}

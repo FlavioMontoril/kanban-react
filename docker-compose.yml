@@ -9,6 +9,17 @@ services:
       - VITE_WS_URL=${VITE_WS_URL}
       - VITE_AUTH_WS_URL=${VITE_AUTH_WS_URL}
     container_name: react-kanbam
-    ports:
-      - "5173:80"
     restart: unless-stopped
+    ports:
+      - "5173:8080"
+    networks:
+      - auth-server-network
+      - kanban-server-network
+
+networks:
+  auth-server-network:
+    name: auth-server-network
+    external: true # Reutiliza a rede criada pelo docker-compose da API
+  kanban-server-network:
+    external: true  # Reutiliza a rede da API de Tarefas
+    name: kanban-server-network
