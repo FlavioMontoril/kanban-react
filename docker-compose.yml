@@ -3,15 +3,13 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-      args:
-      - VITE_API_AUTH_BASE_URL=${VITE_API_AUTH_BASE_URL}
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
-      - VITE_WS_URL=${VITE_WS_URL}
-      - VITE_AUTH_WS_URL=${VITE_AUTH_WS_URL}
     container_name: react-kanbam
+    # Lê automaticamente todas as variáveis do arquivo .env
+    environment:
+      - .env.development
     restart: unless-stopped
     ports:
-      - "5173:8080"
+      - "5173:5173"
     networks:
       - auth-server-network
       - kanban-server-network

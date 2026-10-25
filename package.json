@@ -7,9 +7,9 @@
   "scripts": {
     "dev": "vite --open",
     "prod": "serve -s dist -l 8082",
-    "build": "tsc -b && vite build --mode production",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview --port 8083 --host 0.0.0.0"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

@@ -51,13 +51,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     console.log("[WebSocketProvider] 🔌 Iniciando conexão...");
 
-    // Se a variável contiver apenas '/ws', concatena com a origem do navegador
-    // ✅ Monta explicitamente a URL absoluta do endpoint HTTP/SockJS no Nginx
-    // Exemplo final: "http://ip:port/ws-kanban"
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const wsEndpoint = `${origin}/ws-kanban/`;
+    const KANBAN_WS_URL = import.meta.env.VITE_WS_URL || "/ws-kanban";
 
-    // const WS_URL = import.meta.env.VITE_WS_URL || "/ws-kanban";
+    // Se já for uma URL completa (ex: "http://localhost:8081/ws"), usa ela.
+    // Se for apenas o caminho relativo (ex: "/ws"), concatena com o origin do Nginx ("http://localhost/ws").
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const wsEndpoint =
+      KANBAN_WS_URL.startsWith("http") || KANBAN_WS_URL.startsWith("ws")
+        ? KANBAN_WS_URL
+        : `${origin}${KANBAN_WS_URL.startsWith("/") ? "" : "/"}${KANBAN_WS_URL}`;
 
     const client = new Client({
       webSocketFactory: () =>

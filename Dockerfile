@@ -10,32 +10,29 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-# Recebe o valor de 'args' do docker-compose
-ARG VITE_API_AUTH_BASE_URL
-ENV VITE_API_AUTH_BASE_URL=$VITE_API_AUTH_BASE_URL
-
-ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-
-ARG VITE_WS_URL
-ENV VITE_WS_URL=$VITE_WS_URL
-
-ARG VITE_AUTH_WS_URL
-ENV VITE_AUTH_WS_URL=$VITE_AUTH_WS_URL
-
 RUN pnpm run build
 
-FROM nginxinc/nginx-unprivileged:alpine
-# FROM nginx:alpine
+FROM node:24-alpine AS runner
 
-#Este COPY é  utilizado quando possui rotas na aplicação, junto com o arquivo na raiz nginx.conf
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-COPY --from=build /app/dist /usr/share/nginx/html
+RUN corepack enable
 
-# PORTA PARA USUARIO NÃO ROOT
-EXPOSE 8080
-# PORTA APENAS PARA USUARIO ROOT
-# EXPOSE 80
+# Criar grupo e usuário não-root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-CMD ["nginx", "-g", "daemon off;"]
+# Copiar arquivos do estágio de build
+# COPY --from=build --chown=appuser:appgroup /app/package.json /app/pnpm-lock.yaml ./
+# COPY --from=build --chown=appuser:appgroup /app/node_modules ./node_modules
+# COPY --from=build --chown=appuser:appgroup /app/dist ./dist
+# COPY --from=build --chown=appuser:appgroup /app/public ./public
+
+# Se for usar apenas para testar/visualizar o build final
+COPY --from=build --chown=appuser:appgroup /app/dist ./dist
+
+USER appuser 
+
+EXPOSE 5173
+
+# Ajuste: Executa o preview em vez do dev
+CMD ["pnpm", "dlx", "serve", "-s", "dist", "-l", "5173"]

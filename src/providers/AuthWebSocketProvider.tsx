@@ -51,13 +51,15 @@ export const AuthWebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     console.log("[AuthWebSocketProvider] 🔌 Iniciando conexão...");
 
-    // Se a variável contiver apenas '/ws', concatena com a origem do navegador
-    // ✅ Monta explicitamente a URL absoluta do endpoint HTTP/SockJS no Nginx
-    // Exemplo final: "http://ip:port/ws"
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const wsEndpoint = `${origin}/ws/`;
+    const AUTH_WS_ENV = import.meta.env.VITE_AUTH_WS_URL || "/ws";
 
-    // const AUTH_WS_URL = import.meta.env.VITE_AUTH_WS_URL || "/ws";
+    // Se já for uma URL completa (ex: "http://localhost:8081/ws"), usa ela.
+    // Se for apenas o caminho relativo (ex: "/ws"), concatena com o origin do Nginx ("http://localhost/ws").
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const wsEndpoint =
+      AUTH_WS_ENV.startsWith("http") || AUTH_WS_ENV.startsWith("ws")
+        ? AUTH_WS_ENV
+        : `${origin}${AUTH_WS_ENV.startsWith("/") ? "" : "/"}${AUTH_WS_ENV}`;
 
     const client = new Client({
       // Habilita withCredentials no SockJS para enviar o cookie HttpOnly no Handshake HTTP
