@@ -6,15 +6,24 @@ import { getIcon, getIconColor } from "./utils/task-status.config";
 import { VirtualizedTaskList } from "./virtualized-task-list";
 import { TaskCardVirtualized } from "./TaskCardVirtualized";
 import { Skeleton } from "../ui/skeleton";
+import { useUserStore } from "@/store/useUserStore";
+import { Plus } from "lucide-react";
+import { useTaskModalStore } from "@/store/useTaskModalStore";
+import { useBackgroundStore } from "@/store/useBackgroundStore";
+import { memo } from "react";
 
 interface IKanbanBoard {
   tasks: Task[];
 }
 
-export default function KanbanBoard({ tasks }: IKanbanBoard) {
+export const KanbanBoard = memo(({ tasks }: IKanbanBoard) => {
+  const { openModal } = useTaskModalStore();
   const { loading, moveTaskStatus } = useTasks();
+  const { users } = useUserStore();
 
-  // 4. Handler do Drag & Drop no Board
+  // Consumir a store otimizada
+  const { bgImage } = useBackgroundStore();
+
   const handleDragEnd = (result: DropResult) => {
     const { destination, draggableId } = result;
 
@@ -34,9 +43,7 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
 
     const targetStatus = destination.droppableId as TaskStatus;
 
-    if (task.status === targetStatus) {
-      return;
-    }
+    if (task.status === targetStatus) return;
 
     setTimeout(() => {
       moveTaskStatus(draggableId, targetStatus);
@@ -48,73 +55,63 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
 
   return (
     <>
-      {/* Wrapper Fixo: h-screen e overflow-hidden para travar a janela inteira */}
-      <div className="flex-1 h-full w-full bg-slate-50 dark:bg-slate-950 p-6 font-sans antialiased text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-hidden flex flex-col min-h-0">
+      <div className="relative pt-20 md:pt-20 flex-1 h-full w-full p-4 overflow-hidden flex flex-col min-h-0">
         <div className="w-full mx-auto space-y-4 flex flex-col h-full overflow-hidden">
-          {/* Status de Sincronização */}
-          {loading && (
-            <div className="flex-none text-center text-xs font-semibold text-indigo-600 dark:text-indigo-400 animate-pulse">
-              Sincronizando tarefas com o servidor...
+          {/* Header com os controlos */}
+          <div className="flex-none flex items-center justify-between">
+            <div className="flex-1 text-center">
+              {loading && (
+                <span
+                  className={`text-xs font-semibold animate-pulse ${
+                    bgImage
+                      ? "text-indigo-200 bg-slate-900/40 py-1 px-3 rounded-full backdrop-blur-md border border-white/10"
+                      : "text-indigo-600 dark:text-indigo-400"
+                  }`}
+                >
+                  Sincronizando tarefas com o servidor...
+                </span>
+              )}
             </div>
-          )}
+          </div>
 
-          {/* Quadro Kanban (Flex-1 + min-h-0 para respeitar limites estritos) */}
+          {/* Quadro Kanban */}
           <DragDropContext onDragEnd={handleDragEnd}>
-            <main className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch w-full min-h-0 overflow-hidden">
+            <main className="flex-1 flex items-stretch w-full min-h-0 gap-1 overflow-x-auto overflow-y-hidden pb-2 custom-scrollbar-horizontal">
               {KANBAN_COLUMNS.map((col) => {
                 const columnTasks = tasks.filter((t) => t.status === col.id);
 
                 return (
                   <div
                     key={col.id}
-                    className="bg-slate-100/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 flex flex-col h-full min-h-0 overflow-hidden"
+                    className={`flex-1 min-w-[465px] sm:min-w-[300px] max-w-[360px] mx-auto shrink-0 border rounded-lg flex flex-col h-full min-h-0  overflow-hidden transition-colors ${
+                      bgImage
+                        ? "bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-white/20 dark:border-slate-800/80 shadow-lg"
+                        : "bg-slate-100/70 dark:bg-slate-900/50 border-slate-200/80 dark:border-slate-800"
+                    }`}
                   >
-                    {/* Título da Coluna */}
-                    <div className="flex-none flex justify-between items-center mb-2 px-1">
+                    <div className="flex-none flex justify-between items-center bg-white border-b p-3">
                       <div className="flex items-center gap-2">
                         <div className={`${getIconColor(col.id)} rounded-3xl`}>
                           {getIcon(col.id)}
                         </div>
                         <div>
-                          <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200">
+                          <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">
                             {col.label}
                           </h3>
                         </div>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-200/80 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                          {columnTasks.length}
+                        </span>
                       </div>
-                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-200/80 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                        {columnTasks.length}
-                      </span>
+                      <button
+                        onClick={() => openModal("create")}
+                        title="Criar tarefa"
+                        className="text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-transform hover:scale-110"
+                      >
+                        <Plus size={18} />
+                      </button>
                     </div>
 
-                    {/* Área Droppable (Contida dentro da coluna sem transbordar) */}
-                    {/* <Droppable droppableId={col.id}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className={`flex-1 h-full overflow-y-auto rounded-xl transition-colors p-1 custom-scrollbar ${
-                            snapshot.isDraggingOver
-                              ? "bg-indigo-50/50 dark:bg-indigo-950/30 ring-2 ring-indigo-200 dark:ring-indigo-800 "
-                              : ""
-                          }`}
-                        >
-                          {columnTasks.map((task, index) => (
-                            <TaskCard key={task.id} task={task} index={index} />
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable> */}
-                    {/* Virtualização*/}
-                    {/* <Droppable droppableId={col.id}>
-                      {(provided, snapshot) => (
-                        <VirtualizedTaskList
-                          columnTasks={columnTasks}
-                          provided={provided}
-                          isDraggingOver={snapshot.isDraggingOver}
-                        />
-                      )}
-                    </Droppable> */}
                     {isInitialLoading ? (
                       <div className="flex-1 space-y-2.5 overflow-hidden mt-1 [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]">
                         {Array.from({ length: 7 }).map((_, index) => (
@@ -136,35 +133,39 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
                         ))}
                       </div>
                     ) : (
-                      <>
-                        {/* Virtualização com suporte a Clone para Drag & Drop */}
-                        <Droppable
-                          droppableId={col.id}
-                          renderClone={(provided, snapshot, rubric) => {
-                            const taskIndex = rubric.source.index;
-                            const task = columnTasks[taskIndex];
+                      <Droppable
+                        droppableId={col.id}
+                        renderClone={(provided, snapshot, rubric) => {
+                          const taskIndex = rubric.source.index;
+                          const task = columnTasks[taskIndex];
 
-                            if (!task) return null;
+                          if (!task) return null;
 
-                            return (
-                              <TaskCardVirtualized
-                                task={task}
-                                index={taskIndex}
-                                provided={provided}
-                                isDragging={snapshot.isDragging}
-                              />
-                            );
-                          }}
-                        >
-                          {(provided, snapshot) => (
-                            <VirtualizedTaskList
-                              columnTasks={columnTasks}
+                          // Busca o avatar do único usuário responsável por essa tarefa
+                          const taskUserAvatar = users.find(
+                            (user) => user.id === task.userId,
+                          );
+
+                          return (
+                            <TaskCardVirtualized
+                              task={task}
+                              user={taskUserAvatar!}
+                              index={taskIndex}
                               provided={provided}
-                              isDraggingOver={snapshot.isDraggingOver}
+                              isDragging={snapshot.isDragging}
                             />
-                          )}
-                        </Droppable>
-                      </>
+                          );
+                        }}
+                      >
+                        {(provided, snapshot) => (
+                          <VirtualizedTaskList
+                            users={users}
+                            columnTasks={columnTasks}
+                            provided={provided}
+                            isDraggingOver={snapshot.isDraggingOver}
+                          />
+                        )}
+                      </Droppable>
                     )}
                   </div>
                 );
@@ -175,4 +176,4 @@ export default function KanbanBoard({ tasks }: IKanbanBoard) {
       </div>
     </>
   );
-}
+});

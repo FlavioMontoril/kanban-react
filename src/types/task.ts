@@ -1,9 +1,9 @@
-export enum TaskStatus  {
-  OPEN = 'OPEN',
-  IN_PROGRESS = 'IN_PROGRESS',
-  UNDER_REVIEW = 'UNDER_REVIEW',
-  DONE = 'DONE',
-  CANCELED = 'CANCELED'
+export enum TaskStatus {
+  OPEN = "OPEN",
+  IN_PROGRESS = "IN_PROGRESS",
+  UNDER_REVIEW = "UNDER_REVIEW",
+  DONE = "DONE",
+  CANCELED = "CANCELED",
 }
 
 export interface Task {
@@ -12,26 +12,43 @@ export interface Task {
   title: string;
   description: string;
   status: TaskStatus;
-  reporter: string;
-  assignee: string | null;
+  reporterId: string;
   createdAt: string;
   updatedAt: string | null;
   archived: boolean;
   userId?: string | null;
 }
 
-export type TaskRequestDTO = Pick<Task, 'code' | 'title' | 'description' | 'reporter' | 'assignee' | 'userId'>
+export interface TaskCreatedEventPayload {
+  createdTask: Task;
+  triggeredId: string;
+}
+
+export interface TaskChangeStatusPayload {
+  changeStatus: Task;
+  triggeredId: string;
+}
+
+export interface TaskChangeArchivedPayload {
+  archivedTasks: Task[];
+  triggeredId: string;
+}
+
+export type TaskRequestDTO = Pick<
+  Task,
+  "code" | "title" | "description" | "reporterId" | "userId"
+>;
 
 export interface UpdateTaskStatusDTO {
   status: TaskStatus;
 }
 
 export const KANBAN_COLUMNS = [
-  { id: TaskStatus.OPEN, label: 'Aberto' },
-  { id: TaskStatus.IN_PROGRESS, label: 'Em Progresso' },
-  { id: TaskStatus.UNDER_REVIEW, label: 'Em Revisão' },
-  { id: TaskStatus.DONE, label: 'Concluído' },
-  { id: TaskStatus.CANCELED, label: 'Cancelado' },
+  { id: TaskStatus.OPEN, label: "Aberto" },
+  { id: TaskStatus.IN_PROGRESS, label: "Em Progresso" },
+  { id: TaskStatus.UNDER_REVIEW, label: "Em Revisão" },
+  { id: TaskStatus.DONE, label: "Concluído" },
+  { id: TaskStatus.CANCELED, label: "Cancelado" },
 ];
 
 export interface TasksCount {

@@ -6,20 +6,20 @@ import {
   type NodeProps,
   type Node,
 } from "@xyflow/react";
-import {
-  Trash2,
-  User,
-  UserCheck,
-  Calendar,
-  AlignLeft,
-  Info,
-} from "lucide-react";
+import { User, UserCheck, Calendar, AlignLeft, Info, X } from "lucide-react";
 import { useFlowStore } from "../store/useFlowStore";
 import type { SquareNodeData } from "./Square";
+import { useAuth } from "@/hooks/useAuth";
 
 function DetailsSquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
+  const { users } = useAuth();
   const deleteSquareNode = useFlowStore((state) => state.deleteNodeCascade);
+
   const task = data?.task;
+  const reporterName =
+    users.find((u) => u.id === task?.reporterId)?.name || "Não informado";
+  const assigneeName =
+    users.find((u) => u.id === task?.userId)?.name || "Não informado";
 
   // Formatação de datas
   const formatDate = (dateString?: string) => {
@@ -66,9 +66,8 @@ function DetailsSquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
               type="button"
               onClick={() => deleteSquareNode(id)}
               className="text-white/80 hover:text-white hover:bg-emerald-500/60 p-1 rounded-md transition-colors cursor-pointer border-none bg-transparent"
-              title="Apagar nó de detalhes"
             >
-              <Trash2 size={14} />
+              <X size={14} />
             </button>
           </div>
 
@@ -104,7 +103,7 @@ function DetailsSquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
                     Relator:
                   </span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] truncate">
-                    {task?.reporter || "Não informado"}
+                    {reporterName || "Não informado"}
                   </span>
                 </div>
 
@@ -114,7 +113,7 @@ function DetailsSquare({ data, id }: NodeProps<Node<SquareNodeData>>) {
                     Responsável:
                   </span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200 text-[11px] truncate">
-                    {task?.assignee || "Não atribuído"}
+                    {assigneeName || "Não atribuído"}
                   </span>
                 </div>
               </div>

@@ -12,13 +12,27 @@ COPY . .
 
 RUN pnpm run build
 
-FROM nginx:alpine
+FROM node:24-alpine AS runner
 
-#Este COPY é  utilizado quando possui rotas na aplicação, junto com o arquivo na raiz nginx.conf
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-COPY --from=build /app/dist /usr/share/nginx/html
+RUN corepack enable
 
-EXPOSE 80
+# Criar grupo e usuário não-root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-CMD ["nginx", "-g", "daemon off;"]
+# Copiar arquivos do estágio de build
+# COPY --from=build --chown=appuser:appgroup /app/package.json /app/pnpm-lock.yaml ./
+# COPY --from=build --chown=appuser:appgroup /app/node_modules ./node_modules
+# COPY --from=build --chown=appuser:appgroup /app/dist ./dist
+# COPY --from=build --chown=appuser:appgroup /app/public ./public
+
+# Se for usar apenas para testar/visualizar o build final
+COPY --from=build --chown=appuser:appgroup /app/dist ./dist
+
+USER appuser 
+
+EXPOSE 5173
+
+# Ajuste: Executa o preview em vez do dev
+CMD ["pnpm", "dlx", "serve", "-s", "dist", "-l", "5173"]

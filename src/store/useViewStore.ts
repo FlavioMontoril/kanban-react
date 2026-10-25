@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type OptionsView = "kanban" | "Workflows" | string;
+export type OptionsView = "kanban" | "flow" | string;
 
 interface ViewState {
   selectedView: OptionsView;
@@ -8,7 +8,6 @@ interface ViewState {
 }
 
 export const useViewStore = create<ViewState>((set) => ({
-  // 🎯 Inicializa lendo do localStorage diretamente
   selectedView: (localStorage.getItem("view-mode") as OptionsView) || "kanban",
 
   setSelectedView: (view: OptionsView) => {

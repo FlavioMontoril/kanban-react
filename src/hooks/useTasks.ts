@@ -3,7 +3,6 @@ import { useTaskStore } from "@/store/useTaskStore";
 import type { TaskRequestDTO, TaskStatus } from "@/types/task";
 import { taskApi } from "@/services/taskService";
 import { toast } from "sonner";
-import type { UserResponse } from "@/types/user";
 import { useTaskHistoryStore } from "@/store/useTaskHistories";
 import { useViewStore } from "@/store/useViewStore";
 import type { DateRange } from "react-day-picker";
@@ -46,7 +45,6 @@ export function useTasks() {
     setErrorMetrics,
   } = useTaskMetricsStore();
 
-  const [users, setUsers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   //Estado consolidado que passará pelo debounce (400ms)
@@ -107,17 +105,6 @@ export function useTasks() {
     },
     [setStoreDateRange, setCurrentPage],
   );
-
-  const fetchUsers = useCallback(async () => {
-    try {
-      const data = await taskApi.findAllUsers();
-      setUsers(data);
-      return data;
-    } catch (err: unknown) {
-      console.error("Erro ao carregar usuários:", err);
-      return [];
-    }
-  }, []);
 
   const fetchMetrics = useCallback(async () => {
     setLoadingMetrics(true);
@@ -340,7 +327,6 @@ export function useTasks() {
 
   return {
     tasks,
-    users,
     metrics,
     loadingMetrics,
     errorMetrics,
@@ -360,7 +346,6 @@ export function useTasks() {
     fetchTasks,
     fetchTasksPaged,
     fetchTasksHistories,
-    fetchUsers,
     fetchMetrics,
     setStatus,
     setSearch,

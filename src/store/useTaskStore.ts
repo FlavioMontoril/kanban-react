@@ -11,6 +11,7 @@ interface TaskState {
   currentPage: number;
   size: number;
   setTasks: (tasks: Task[]) => void;
+  setTask: (tasks: Task) => void;
   setPageData: (pageData: PageResponse<Task> | null) => void;
   setSearch: (search: string) => void; // 🎯 Nova ação de busca
   setCurrentPage: (page: number) => void; // 👈 Ação para atualizar a página
@@ -31,7 +32,31 @@ export const useTaskStore = create<TaskState>((set) => ({
   size: 20,
 
   setTasks: (tasks) => set({ tasks }),
+  setTask: (task) =>
+  set((state) => {
+    const exists = state.tasks.some((t) => t.id === task.id);
 
+    if (exists) {
+      // Atualiza a tarefa existente
+      return {
+        tasks: state.tasks.map((t) => (t.id === task.id ? task : t)),
+      };
+    }
+
+    // Adiciona a nova tarefa no início
+    return {
+      tasks: [task, ...state.tasks],
+    };
+  }),
+  // setTask: (task) =>
+  //   set((state) => {
+  //     const exists = state.tasks.some((t) => t.id === task.id);
+  //     if (exists) return state;
+
+  //     return {
+  //       tasks: [task, ...state.tasks],
+  //     };
+  //   }),
   setPageData: (pageData) => set({ pageData, currentPage: pageData?.page }),
   setSearch: (search: string) => set({ search, currentPage: 0 }),
   setCurrentPage: (currentPage) => set({ currentPage }),
